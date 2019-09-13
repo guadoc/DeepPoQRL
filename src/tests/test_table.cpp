@@ -160,14 +160,14 @@ public:
 	}
 
 	int test_algo_g(){
-		unsigned int n_generation = 1;
+		unsigned int n_generation = 2;
 		unsigned int n_hand_generation = 1;
 		unsigned int n_player = 6;
 		vector<AbstractPlayer*> players;
 		for (unsigned int position=0; position < n_player; position++){
 			AbstractPlayer * p = new PlayerBotV1(to_string(position));
-			((PlayerBot*)p)->set_train_mode(true);
-			((PlayerBotV1*)p)->init_params();
+//			((PlayerBot*)p)->set_train_mode(true);
+//			((PlayerBotV1*)p)->init_params();
 			players.push_back(p);
 		}
 		cout<<"Players initialized"<<endl;
@@ -175,15 +175,21 @@ public:
 		clock_t start = clock();
 
 		for (unsigned int gen = 1; gen <= n_generation; gen++){
+			cout<<"GENERATION "<<gen<<endl;
+			cout<<table->to_str()<<endl;
 			for (unsigned int i =1; i<= n_hand_generation; i++){
 				utils::progress_bar((float)i/(float)n_hand_generation);
 				table->play_hand();
 			}
-			cout<<"GENERATION "<<gen<<endl;
+
 			cout<<table->to_str()<<endl;
 			for (auto &player :players){
-				if (player->get_bank_roll() + player->get_stake()< player->get_base_stake()){
-					((PlayerBot*)player)->mute_macro_params();
+				if (player->get_bank_roll() + player->get_stake() < player->get_initial_bank_roll()){
+					((PlayerBotV1*)player)->mute_macro_params();
+					cout<<"Player "<<player->get_id()<<" mutes"<<endl;
+					cout<<player->get_bank_roll()<<endl;
+					cout<<player->get_stake()<<endl;
+					cout<<player->get_initial_bank_roll()<<endl;
 				}
 				player->init_bank_roll();
 			}

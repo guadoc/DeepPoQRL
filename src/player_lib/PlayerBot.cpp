@@ -9,21 +9,21 @@
 
 
 PlayerBot::PlayerBot(void):ParentPlayerBot(){
-	this->init_params();// TO CALL IN CHILD CLASS
+//	this->init_params();// TO CALL IN CHILD CLASS
 	this->loss = 0;
 	this->train_mode = true;
 	this->param_stat = 0;
 }
 
 PlayerBot::PlayerBot(AbstractTable * table):ParentPlayerBot(table){
-	this->init_params();
+//	this->init_params();
 	this->loss = 0;
 	this->train_mode = true;
 	this->param_stat = 0;
 }
 
 PlayerBot::PlayerBot(string id):ParentPlayerBot(id){
-	this->init_params();
+//	this->init_params();
 	this->loss = 0;
 	this->train_mode = true;
 	this->param_stat = 0;
@@ -31,7 +31,7 @@ PlayerBot::PlayerBot(string id):ParentPlayerBot(id){
 }
 
 PlayerBot::PlayerBot(AbstractTable * table, unsigned int position):ParentPlayerBot(table, position){
-	this->init_params();
+//	this->init_params();
 	this->loss = 0;
 	this->train_mode = true;
 	this->param_stat = 0;

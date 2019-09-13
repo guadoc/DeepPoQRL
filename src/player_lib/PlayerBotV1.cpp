@@ -10,7 +10,7 @@
 #include "../deck_lib/Hand.h"
 
 PlayerBotV1::PlayerBotV1(void):ParentPlayerBotV1(){
-//	this->init_params();
+	this->init_params();
 	this->lead = false;
 //	this->learning_rate = 0.1;
 //	this->param_reg = 0.1;
@@ -18,7 +18,7 @@ PlayerBotV1::PlayerBotV1(void):ParentPlayerBotV1(){
 
 
 PlayerBotV1::PlayerBotV1(string id, float learning_rate):ParentPlayerBotV1(id){
-//	this->init_params();
+	this->init_params();
 //	this->learning_rate = learning_rate;
 //	this->param_reg = learning_rate;
 	this->lead = false;
@@ -26,7 +26,7 @@ PlayerBotV1::PlayerBotV1(string id, float learning_rate):ParentPlayerBotV1(id){
 
 
 PlayerBotV1::PlayerBotV1(string id):ParentPlayerBotV1(id){
-//	this->init_params();
+	this->init_params();
 	this->lead = false;
 }
 
@@ -36,8 +36,7 @@ void PlayerBotV1::init_params(default_random_engine& generator){
 }
 
 void PlayerBotV1::init_params(){
-	this->init_macro_params();
-	this->init_learning_params();
+	ParentPlayerBotV1::init_params();
 }
 
 void PlayerBotV1::init_macro_params(){
@@ -58,7 +57,8 @@ void PlayerBotV1::init_macro_params(default_random_engine& generator){
 }
 
 void PlayerBotV1::mute_macro_params(){
-	//TODO
+	cout<<"Muting"<<endl;
+	this->init_macro_params();
 }
 
 void PlayerBotV1::init_learning_params(){
