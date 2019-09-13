@@ -164,11 +164,13 @@ public:
 		unsigned int n_hand_generation = 1;
 		unsigned int n_player = 6;
 		vector<AbstractPlayer*> players;
+		std::default_random_engine generator;
 		for (unsigned int position=0; position < n_player; position++){
 			AbstractPlayer * p = new PlayerBotV1(to_string(position));
 //			((PlayerBot*)p)->set_train_mode(true);
 //			((PlayerBotV1*)p)->init_params();
 			players.push_back(p);
+			((PlayerBotV1*)p)->init_macro_params(generator);
 		}
 		cout<<"Players initialized"<<endl;
 		AbstractTable* table = new TableTrain(players);
@@ -185,11 +187,8 @@ public:
 			cout<<table->to_str()<<endl;
 			for (auto &player :players){
 				if (player->get_bank_roll() + player->get_stake() < player->get_initial_bank_roll()){
-					((PlayerBotV1*)player)->mute_macro_params();
+					((PlayerBotV1*)player)->mute_macro_params(generator);
 					cout<<"Player "<<player->get_id()<<" mutes"<<endl;
-					cout<<player->get_bank_roll()<<endl;
-					cout<<player->get_stake()<<endl;
-					cout<<player->get_initial_bank_roll()<<endl;
 				}
 				player->init_bank_roll();
 			}

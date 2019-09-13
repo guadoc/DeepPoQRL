@@ -8,6 +8,8 @@
 #ifndef PLAYER_LIB_PLAYERBOT_H_
 #define PLAYER_LIB_PLAYERBOT_H_
 
+#include <random>
+
 #define DEBUG 0
 
 #if DEBUG > 0
@@ -39,6 +41,8 @@ public:
 
 	virtual void init_macro_params()=0;
 	virtual void mute_macro_params()=0;
+//	virtual void mute_macro_params(std::default_random_engine& generator)=0;
+//	virtual void init_learning_params(std::default_random_engine& generator)=0;
 	virtual void init_learning_params()=0;
 	virtual void train() = 0;
 

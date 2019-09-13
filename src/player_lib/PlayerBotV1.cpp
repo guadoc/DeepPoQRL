@@ -57,8 +57,11 @@ void PlayerBotV1::init_macro_params(default_random_engine& generator){
 }
 
 void PlayerBotV1::mute_macro_params(){
-	cout<<"Muting"<<endl;
 	this->init_macro_params();
+}
+
+void PlayerBotV1::mute_macro_params(default_random_engine& generator){
+	this->init_macro_params(generator);
 }
 
 void PlayerBotV1::init_learning_params(){

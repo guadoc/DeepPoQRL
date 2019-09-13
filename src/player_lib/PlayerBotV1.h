@@ -28,6 +28,7 @@ public:
 	void init_params(std::default_random_engine& generator);
 	void init_params();
 	void mute_macro_params();
+	void mute_macro_params(std::default_random_engine& generator);
 	void init_learning_params();
 
 
