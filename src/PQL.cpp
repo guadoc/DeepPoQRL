@@ -15,7 +15,10 @@
 
 using namespace std;
 
+
 int main() {
+
+
 /******* TEST HAND MANAGER */
 	test_deck test_d = test_deck();
 //	test_d.test_card();
@@ -40,13 +43,19 @@ int main() {
 //	test.test_gui_player();
 //	test.test_random_player();
 //	test.test_train_table();
-	test.test_algo_g();
 //	test.test_torch();
 //	test.test_graphic_table();
 //	test.test_session();
+//	test.test_algo_g();
+	test.test_trained_player();
+
+//	test.test_player_serialization();
 
 
 //	test.test_complete_average_value();
+
+
+
 
 
 	return 0;

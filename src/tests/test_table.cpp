@@ -24,6 +24,35 @@ public:
 
 	}
 
+
+	int test_player_serialization(){
+//		AbstractPlayer player = AbstractPlayer();
+//		player.add_to_stake(333);
+//		cout<<player.get_stake()<<endl;
+//		player.save_to_folder("./");
+//
+//		AbstractPlayer new_player = AbstractPlayer();
+//		new_player.load_from_file("./AbstractPlayer");
+//		cout<<new_player.get_stake()<<endl;
+
+//		BOOST_SERIALIZATION_ASSUME_ABSTRACT( AbstractPlayer);
+//		BOOST_SERIALIZATION_ASSUME_ABSTRACT( PlayerBotV1);
+
+		PlayerBotV1 player = PlayerBotV1();
+		player.add_to_stake(333);
+		player.set_learning_rate(77);
+		cout<<player.get_stake()<<endl;
+		cout<<player.get_learning_rate()<<endl;
+		player.save_to_folder(".");
+
+		PlayerBotV1 new_player = PlayerBotV1();
+		new_player.load_from_file("./PlayerBotV1");
+		cout<<new_player.get_stake()<<endl;
+		cout<<new_player.get_learning_rate()<<endl;
+
+		return 0;
+	}
+
 	int test_torch(){
 		float param[] = {1.};
 		float input[] = {0.5};
@@ -159,9 +188,14 @@ public:
 		return 0;
 	}
 
+	static bool compare_players(AbstractPlayer * const & a, AbstractPlayer * const & b)
+	{
+	   return *a > *b;
+	}
+
 	int test_algo_g(){
-		unsigned int n_generation = 2;
-		unsigned int n_hand_generation = 1;
+		unsigned int n_generation = 20;
+		unsigned int n_hand_generation = 5000;
 		unsigned int n_player = 6;
 		vector<AbstractPlayer*> players;
 		std::default_random_engine generator;
@@ -176,27 +210,86 @@ public:
 		AbstractTable* table = new TableTrain(players);
 		clock_t start = clock();
 
+		list<PlayerBotV1*> winning_players;
+
 		for (unsigned int gen = 1; gen <= n_generation; gen++){
 			cout<<"GENERATION "<<gen<<endl;
 			cout<<table->to_str()<<endl;
+			for (auto &player :players)player->init_bank_roll();
+
 			for (unsigned int i =1; i<= n_hand_generation; i++){
-				utils::progress_bar((float)i/(float)n_hand_generation);
+//				utils::progress_bar((float)i/(float)n_hand_generation);
 				table->play_hand();
 			}
 
+
 			cout<<table->to_str()<<endl;
+			winning_players.clear();
+			//Select models (natural selection)
 			for (auto &player :players){
-				if (player->get_bank_roll() + player->get_stake() < player->get_initial_bank_roll()){
-					((PlayerBotV1*)player)->mute_macro_params(generator);
-					cout<<"Player "<<player->get_id()<<" mutes"<<endl;
+				if (player->get_bank_roll() + player->get_stake() > player->get_initial_bank_roll()){
+					winning_players.push_back((PlayerBotV1*)player);
 				}
-				player->init_bank_roll();
+			}
+			for (auto &player :players){
+				cout<<"Player "<<player->get_id()<<" Lr: "<<((PlayerBotV1*)player)->get_learning_rate()<<", Rp: "<<((PlayerBotV1*)player)->get_param_reg();
+				cout<<"-------->Param lead: "<<((PlayerBotV1*)player)->get_param_lead()<<", param foll: "<< ((PlayerBotV1*)player)->get_param_foll()<<endl;
+				if (player->get_bank_roll() + player->get_stake() < player->get_initial_bank_roll()){
+					((PlayerBotV1*)player)->mute_macro_params(winning_players, generator);
+					cout<<" mutes"<<endl;
+				}
 			}
 		}
+
+		std::sort(players.begin(), players.end(), compare_players);
+		for(auto &player: players){
+			cout<<"Player "<<player->get_id();
+			cout<<" bankroll "<<player->get_bank_roll() + player->get_stake()<<endl;
+		}
+
+		BOOST_SERIALIZATION_ASSUME_ABSTRACT( AbstractPlayer );
+		(*players.begin())->save_to_folder(".");
+
 		clock_t stop = clock();
 		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
 		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
 		return 0;
+	}
+
+
+	int test_trained_player(){
+		unsigned int n_player = 6;
+		vector<AbstractPlayer*> players;
+		AbstractPlayer * p = new PlayerBotV1(to_string(0), 0.1);
+		p->load_from_file("./4");
+		((PlayerBot*)p)->set_train_mode(false);
+		players.push_back(p);
+
+		cout<<"Lr: "<<((PlayerBotV1*)p)->get_learning_rate()<<", Rp: "<<((PlayerBotV1*)p)->get_param_reg();
+		cout<<"-------->Param lead: "<<((PlayerBotV1*)p)->get_param_lead()<<", param foll: "<< ((PlayerBotV1*)p)->get_param_foll()<<endl;
+		cout<<" bankroll "<<p->get_bank_roll() + p->get_stake()<<endl;
+		p->init_bank_roll();
+		for (unsigned int position=1; position < n_player; position++){
+			AbstractPlayer * p = new PlayerBotV1(to_string(position), 0.1);
+			((PlayerBot*)p)->set_train_mode(false);
+			players.push_back(p);
+		}
+		cout<<"Players initialized"<<endl;
+		AbstractTable* table = new TableTrain(players);
+		unsigned int n_hands = 5000;
+		clock_t start = clock();
+		for (unsigned int i =1; i<= n_hands; i++){
+//			utils::progress_bar((float)i/(float)n_hands);
+			table->play_hand();
+		}
+		cout<<table->to_str()<<endl;
+		cout<<"Lr: "<<((PlayerBotV1*)p)->get_learning_rate()<<", Rp: "<<((PlayerBotV1*)p)->get_param_reg();
+
+		clock_t stop = clock();
+		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
+		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
+		return 0;
+
 	}
 
 

@@ -37,6 +37,7 @@ public:
 	}
 
 	static void progress_bar(float percentage){
+		cout<< "\r";
 		unsigned int N_char_to_print = 100;
 		unsigned int n_done = (unsigned int) N_char_to_print * percentage;
 		unsigned int n_todo = (unsigned int) N_char_to_print * (1 -percentage);
@@ -47,12 +48,8 @@ public:
 		for (unsigned int i = 0; i<n_todo; i++){
 			bar+=".";
 		}
-		cout<<bar<<endl;
-//		bar = "";
-//		for(unsigned int i = 0; i<N_char_to_print; i++){
-//			bar+="\r";
-//		}
-//		cout<<bar<<endl;
+		cout<<bar;
+		cout.flush();
 	}
 
 

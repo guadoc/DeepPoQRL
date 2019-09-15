@@ -4,6 +4,7 @@
 #include "../table_lib/AbstractTable.h"
 #include "../utils/utils.h"
 
+
 #define BASE_STAKE 100
 #define BANK_ROLL 100000
 
@@ -42,24 +43,49 @@ void AbstractPlayer::init_bank_roll(){
 	this->auto_rebuy = true;
 }
 
+bool AbstractPlayer::operator>=(const AbstractPlayer &player){
+	return (this->bank_roll + this->stake) >= (player.get_bank_roll() + player.get_stake());
+}
+
+bool AbstractPlayer::operator>(const AbstractPlayer &player){
+	return (this->bank_roll + this->stake) > (player.get_bank_roll() + player.get_stake());
+}
+
+bool AbstractPlayer::operator==(const AbstractPlayer &player){
+	return (this->bank_roll + this->stake) == (player.get_bank_roll() + player.get_stake());
+}
+
+bool AbstractPlayer::operator<=(const AbstractPlayer &player){
+	return (this->bank_roll + this->stake) <= (player.get_bank_roll() + player.get_stake());
+}
+
+bool AbstractPlayer::operator<(const AbstractPlayer &player){
+	return (this->bank_roll + this->stake) < (player.get_bank_roll() + player.get_stake());
+}
+
 unsigned int AbstractPlayer::get_initial_bank_roll(){
 	return this->initial_bank_roll;
 }
 
+
 void AbstractPlayer::save_to_folder(string folder_name) const {
-	string file_name = folder_name + this->id;
-	ofstream out(file_name);
-	out.write((char *) this, sizeof(AbstractPlayer));
-	if (out.fail())
-		cout << "read failed" << endl;
-	out.close();
+	string filename = folder_name + "/" + this->id;
+	std::ofstream ofs(filename);
+	boost::archive::binary_oarchive oa(ofs);
+	this->transfert_out(oa);
+	cout<<"Player saved in folder "<<filename<<endl;
+}
+void AbstractPlayer::transfert_out(boost::archive::binary_oarchive &oa) const{
+	oa << *this;
 }
 
-void AbstractPlayer::load_from_file(string file_name) {
-	ifstream *in = new ifstream(file_name);
-	in->read((char *) this, sizeof(AbstractPlayer));
-	if (in->fail())
-		cout << "read failed" << endl;
+void AbstractPlayer::load_from_file(string filename) {
+	ifstream ifs(filename);
+	boost::archive::binary_iarchive iarch(ifs);
+	this->transfert_in(iarch);
+}
+void AbstractPlayer::transfert_in(boost::archive::binary_iarchive & iarch){
+	iarch >> *this;
 }
 
 unsigned int AbstractPlayer::get_stake() const {

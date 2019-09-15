@@ -6,6 +6,14 @@
 #include "../deck_lib/Hand.h"
 #include "../StdAfx.h"
 #include "StatPlayer.h"
+
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <fstream>
+#include <iostream>
+
+
 using namespace std;
 class AbstractTable;
 
@@ -17,6 +25,12 @@ public:
 	AbstractPlayer(AbstractTable *);
 	AbstractPlayer(AbstractTable *, unsigned int position);
 	virtual ~AbstractPlayer();
+
+	bool operator>=(const AbstractPlayer &player);
+	bool operator>(const AbstractPlayer &player);
+	bool operator<(const AbstractPlayer &player);
+	bool operator<=(const AbstractPlayer &player);
+	bool operator==(const AbstractPlayer &player);
 
 	void init_bank_roll();
 	void set_hand(const Hand &);
@@ -73,10 +87,17 @@ public:
 	virtual Action play_turn(){cout<< "virtual function playTurn not defined"<<endl;return t_fold;};
 	virtual Action play_river(){cout<< "virtual function playRiver not defined"<<endl;return t_fold;};
 
-
+	virtual void transfert_in(boost::archive::binary_iarchive & iarch);
+	virtual void transfert_out(boost::archive::binary_oarchive &oa) const;
 	void save_to_folder(string) const;
 	void load_from_file(string);
 
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version){
+		ar & stake;
+		ar & bank_roll;
+	}
 
 protected:
 	unsigned int stake;

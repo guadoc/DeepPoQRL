@@ -41,6 +41,7 @@ public:
 
 	virtual void init_macro_params()=0;
 	virtual void mute_macro_params()=0;
+//	virtual void muste_macro_params(list<PlayerBot*>) = 0;
 //	virtual void mute_macro_params(std::default_random_engine& generator)=0;
 //	virtual void init_learning_params(std::default_random_engine& generator)=0;
 	virtual void init_learning_params()=0;

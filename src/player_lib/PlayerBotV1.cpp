@@ -12,6 +12,7 @@
 PlayerBotV1::PlayerBotV1(void):ParentPlayerBotV1(){
 	this->init_params();
 	this->lead = false;
+	this->id = "PlayerBotV1";
 //	this->learning_rate = 0.1;
 //	this->param_reg = 0.1;
 }
@@ -39,25 +40,43 @@ void PlayerBotV1::init_params(){
 	ParentPlayerBotV1::init_params();
 }
 
+void PlayerBotV1::set_learning_rate(float learning_rate){
+	this->learning_rate = learning_rate;
+}
+
 void PlayerBotV1::init_macro_params(){
 	std::default_random_engine generator;
-	std::normal_distribution<double> distribution_lr(0.1,0.01);
+	std::normal_distribution<double> distribution_lr(1,0.01);
 	this->learning_rate = (float)distribution_lr(generator);
-	std::normal_distribution<double> distribution_reg(0.1,0.01);
+	std::normal_distribution<double> distribution_reg(1,0.01);
 	this->param_reg = (float)distribution_reg(generator);
-	cout<<"learning_rate "<<this->learning_rate <<" param_reg "<<this->param_reg<<endl;
+//	cout<<"learning_rate "<<this->learning_rate <<" param_reg "<<this->param_reg<<endl;
 }
 
 void PlayerBotV1::init_macro_params(default_random_engine& generator){
-	std::normal_distribution<double> distribution_lr(0.1,0.01);
+	std::normal_distribution<double> distribution_lr(1,0.1);
 	this->learning_rate = (float)distribution_lr(generator);
-	std::normal_distribution<double> distribution_reg(0.1,0.01);
+	std::normal_distribution<double> distribution_reg(1,0.1);
 	this->param_reg = (float)distribution_reg(generator);
-	cout<<"Learning_rate "<<this->learning_rate <<" Param_reg "<<this->param_reg<<endl;
+//	cout<<"Learning_rate "<<this->learning_rate <<" Param_reg "<<this->param_reg<<endl;
 }
 
 void PlayerBotV1::mute_macro_params(){
 	this->init_macro_params();
+}
+
+void PlayerBotV1::mute_macro_params(list<PlayerBotV1*> & winning_players, default_random_engine& generator){
+	int rand_index = rand() % winning_players.size();
+	auto it = winning_players.begin();
+	std::advance(it, rand_index);
+	std::normal_distribution<double> distribution_lr((*it)->get_learning_rate(), 0.1);
+	this->learning_rate = (float)distribution_lr(generator);
+
+	rand_index = rand() % winning_players.size();
+	it = winning_players.begin();
+	std::advance(it, rand_index);
+	std::normal_distribution<double> distribution_reg((*it)->get_param_reg(), 0.1);
+	this->param_reg = (float)distribution_lr(generator);
 }
 
 void PlayerBotV1::mute_macro_params(default_random_engine& generator){
@@ -67,6 +86,22 @@ void PlayerBotV1::mute_macro_params(default_random_engine& generator){
 void PlayerBotV1::init_learning_params(){
 	this->param_lead = 0;
 	this->param_foll = 0;
+}
+
+float PlayerBotV1::get_learning_rate(){
+	return this->learning_rate;
+}
+
+float PlayerBotV1::get_param_reg(){
+	return this->param_reg;
+}
+
+float PlayerBotV1::get_param_foll(){
+	return this->param_foll;
+}
+
+float PlayerBotV1::get_param_lead(){
+	return this->param_lead;
 }
 
 
@@ -142,8 +177,8 @@ AbstractPlayer::Action PlayerBotV1::play_river(){
 
 
 void PlayerBotV1::train(){
-	cout<<"Stack "<<this->stake<<endl;
-	cout<<"LOSS "<<this->loss<<endl;
+//	cout<<"Stack "<<this->stake<<endl;
+//	cout<<"LOSS "<<this->loss<<endl;
 	float update_term;
 
 	if (this->lead){
@@ -162,8 +197,8 @@ void PlayerBotV1::train(){
 			this->param_foll -=  this->learning_rate;
 		}
 	}
-	cout<<" Sit "<<this->pos_on_table<< "(param lead): "<<this->param_lead<<endl;
-	cout<<" Sit "<<this->pos_on_table<< "(param foll): "<<this->param_foll<<endl;
+//	cout<<" Sit "<<this->pos_on_table<< "(param lead): "<<this->param_lead<<endl;
+//	cout<<" Sit "<<this->pos_on_table<< "(param foll): "<<this->param_foll<<endl;
 	this->lead = false;
 }
 
