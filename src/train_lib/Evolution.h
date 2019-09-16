@@ -9,30 +9,34 @@
 #define TRAIN_LIB_EVOLUTION_H_
 
 #include "Session.h"
-#include "../player_lib/PlayerBot.h"
+#include "../player_lib/AbstractPlayer.h"
 
 namespace std {
 
 class Evolution {
 public:
 	Evolution();
+	Evolution(vector<AbstractPlayer*>&);
 	virtual ~Evolution();
 
-	void run_party();
-	void selection(Session);
-	void run_thread(unsigned int);
-	bool select_genome(AbstractPlayer *);
-	void save_genome();
-//	void mix_genome();
+	list<AbstractPlayer*> select_survivors(vector<AbstractPlayer *> &);
+	bool survived(AbstractPlayer *);
+	void run_selection();
+	void run_evolution();
+	void run_mutations();
+	string save_best_genome();
+//	void update_generation_folder();
 
-	void update_generation_folder();
 private:
-	unsigned int n_hand_generation;
-	vector<Session> sessions;
+	unsigned int n_players;
+	TableTrain * table;
+	vector<AbstractPlayer*> candidates;
+	unsigned int n_hand_selection;
+	unsigned int n_generation;
+	std::default_random_engine generator;
+
 	string generation_folder;
 	string base_folder;
-	unsigned int n_sessions;
-	unsigned int generation;
 };
 
 } /* namespace std */

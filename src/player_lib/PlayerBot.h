@@ -36,14 +36,14 @@ public:
 	void commit_chips(unsigned int);
 	void add_to_stake(unsigned int);
 	void update_stats();
-	void init_params();
 	void set_train_mode(bool);
 
+	void init_params();
 	virtual void init_macro_params()=0;
 	virtual void mute_macro_params()=0;
-//	virtual void muste_macro_params(list<PlayerBot*>) = 0;
+	virtual void init_macro_params(std::default_random_engine& generator)=0;
+	virtual void mute_macro_params(list<AbstractPlayer*> &, std::default_random_engine&) = 0;
 //	virtual void mute_macro_params(std::default_random_engine& generator)=0;
-//	virtual void init_learning_params(std::default_random_engine& generator)=0;
 	virtual void init_learning_params()=0;
 	virtual void train() = 0;
 

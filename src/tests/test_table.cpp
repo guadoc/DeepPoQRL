@@ -12,6 +12,8 @@
 #include "../table_lib/TableGUI.h"
 #include "../utils/utils.h"
 
+#include "../train_lib/Evolution.h"
+
 #include <torch/torch.h>
 
 
@@ -22,6 +24,12 @@ class test_table
 public:
 	test_table(void){
 
+	}
+
+	int test_evolution(){
+		Evolution evolution = Evolution();
+		evolution.run_evolution();
+		return 0;
 	}
 
 
@@ -84,21 +92,21 @@ public:
 
 
 
-	int test_session(){
-		vector<AbstractPlayer*> players;
-
-		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_1", 0.0));
-		players.push_back(new PlayerBotV2("PlayerBotV2_lr-0.1", 0.0001));
-		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_2", 0.0));
-		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_3", 0.0));
-		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_4", 0.0));
-		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_5", 0.0));
-
-		Session sess = Session(players);
-		unsigned int n_hands = 100000;
-		sess.run(n_hands);
-		return 0;
-	}
+//	int test_session(){
+//		vector<AbstractPlayer*> players;
+//
+//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_1", 0.0));
+//		players.push_back(new PlayerBotV2("PlayerBotV2_lr-0.1", 0.0001));
+//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_2", 0.0));
+//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_3", 0.0));
+//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_4", 0.0));
+//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_5", 0.0));
+//
+//		Session sess = Session(players);
+//		unsigned int n_hands = 100000;
+//		sess.run(n_hands);
+//		return 0;
+//	}
 
 
 
@@ -204,13 +212,13 @@ public:
 //			((PlayerBot*)p)->set_train_mode(true);
 //			((PlayerBotV1*)p)->init_params();
 			players.push_back(p);
-			((PlayerBotV1*)p)->init_macro_params(generator);
+			((PlayerBot*)p)->init_macro_params(generator);
 		}
 		cout<<"Players initialized"<<endl;
 		AbstractTable* table = new TableTrain(players);
 		clock_t start = clock();
 
-		list<PlayerBotV1*> winning_players;
+		list<AbstractPlayer*> winning_players;
 
 		for (unsigned int gen = 1; gen <= n_generation; gen++){
 			cout<<"GENERATION "<<gen<<endl;
@@ -228,14 +236,14 @@ public:
 			//Select models (natural selection)
 			for (auto &player :players){
 				if (player->get_bank_roll() + player->get_stake() > player->get_initial_bank_roll()){
-					winning_players.push_back((PlayerBotV1*)player);
+					winning_players.push_back(player);
 				}
 			}
 			for (auto &player :players){
 				cout<<"Player "<<player->get_id()<<" Lr: "<<((PlayerBotV1*)player)->get_learning_rate()<<", Rp: "<<((PlayerBotV1*)player)->get_param_reg();
 				cout<<"-------->Param lead: "<<((PlayerBotV1*)player)->get_param_lead()<<", param foll: "<< ((PlayerBotV1*)player)->get_param_foll()<<endl;
 				if (player->get_bank_roll() + player->get_stake() < player->get_initial_bank_roll()){
-					((PlayerBotV1*)player)->mute_macro_params(winning_players, generator);
+					((PlayerBot*)player)->mute_macro_params(winning_players, generator);
 					cout<<" mutes"<<endl;
 				}
 			}

@@ -47,8 +47,9 @@ int main() {
 //	test.test_graphic_table();
 //	test.test_session();
 //	test.test_algo_g();
-	test.test_trained_player();
+//	test.test_trained_player();
 
+	test.test_evolution();
 //	test.test_player_serialization();
 
 

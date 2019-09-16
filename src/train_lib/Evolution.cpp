@@ -6,14 +6,32 @@
  */
 
 #include "Evolution.h"
+#include "../player_lib/PlayerBotV1.h"
 
 
 namespace std {
 
 Evolution::Evolution() {
-	this->generation = 0;
-	this->n_hand_generation = 50000;
-	this->n_sessions = 1;
+	this->n_hand_selection = 100;
+	this->n_generation = 5;
+	this->n_players = 6;
+	this->generator = std::default_random_engine();
+	for (unsigned int position=0; position < this->n_players; position++){
+		AbstractPlayer * p = new PlayerBotV1(to_string(position));
+		this->candidates.push_back(p);
+		((PlayerBot*)p)->init_macro_params(generator);
+		((PlayerBot*)p)->set_train_mode(true);
+	}
+	this->table = new TableTrain(this->candidates);
+}
+
+Evolution::Evolution(vector<AbstractPlayer*>& players) {
+	this->n_hand_selection = 5000;
+		this->n_generation = 20;
+		this->n_players = 6;
+		this->generator = std::default_random_engine();
+		this->candidates = players;
+		this->table = new TableTrain(this->candidates);
 }
 
 Evolution::~Evolution() {
@@ -21,41 +39,62 @@ Evolution::~Evolution() {
 }
 
 
-bool Evolution::select_genome(AbstractPlayer * player){
-	if(player->get_stake()> 3* player->get_base_stake()){
-		return true;
-	}
-	else{return false;}
-	return false;
-}
-
-void Evolution::selection(Session session){
-	vector<AbstractPlayer*> players = session.get_players();
-	for (auto player : players){
-		if(this->select_genome(player)){
-			player->save_to_folder(this->generation_folder);
+list<AbstractPlayer*> Evolution::select_survivors(vector<AbstractPlayer *> & players){
+	list<AbstractPlayer *> surviving_players;
+	for (auto &player :players){
+		if (this->survived(player)){
+			surviving_players.push_back(player);
 		}
-		else{
-			// get new model (from mix or from former generation)
-//			this->mix_genome();
-			static_cast<PlayerBot*>(player)->mute_macro_params();
+	}
+	return surviving_players;
+}
+bool Evolution::survived(AbstractPlayer *player){
+	return (player->get_bank_roll() + player->get_stake()) > (player->get_initial_bank_roll());
+}
+
+void Evolution::run_selection(){
+	for (unsigned int i =1; i<= this->n_hand_selection; i++){
+		utils::progress_bar((float)i/(float)this->n_hand_selection);
+		this->table->play_hand();
+	}
+}
+static bool compare_players(AbstractPlayer * const & a, AbstractPlayer * const & b)
+	{
+	   return *a > *b;
+	}
+
+string Evolution::save_best_genome(){
+	std::sort(this->candidates.begin(), this->candidates.end(), compare_players);
+//	BOOST_SERIALIZATION_ASSUME_ABSTRACT( AbstractPlayer );
+	string folder = ".";
+	(*this->candidates.begin())->save_to_folder(folder);
+	return folder;
+}
+
+void Evolution::run_mutations(){
+	list<AbstractPlayer*> survivors = this->select_survivors(this->candidates);
+	for (auto & player: this->candidates){
+		if(not this->survived(player)){
+			((PlayerBot*)player)->mute_macro_params(survivors, this->generator);
 		}
-		player->init_bank_roll();
-	}
-	//TODO set new vector of players
-}
-
-void Evolution::update_generation_folder(){
-	this->generation_folder = this->base_folder + "/" + to_string(this->generation);
-}
-
-void Evolution::run_thread(unsigned int thread_session){
-	while(true){
-		sessions[thread_session].run(this->n_hand_generation);
-		this->selection(sessions[thread_session]);
-		this->generation++;
-		this->update_generation_folder();
 	}
 }
+
+void Evolution::run_evolution(){
+	for(unsigned int j= 1; j<= this->n_generation; j++){
+		this->run_selection();
+		cout<<this->table->to_str()<<endl;
+		this->run_mutations();
+	}
+	this->save_best_genome();
+}
+
+
+
+//void Evolution::update_generation_folder(){
+//	this->generation_folder = this->base_folder + "/" + to_string(this->generation);
+//}
+
+
 
 } /* namespace std */

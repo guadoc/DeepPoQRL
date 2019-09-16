@@ -20,7 +20,7 @@ PlayerBotV1::PlayerBotV1(void):ParentPlayerBotV1(){
 
 PlayerBotV1::PlayerBotV1(string id, float learning_rate):ParentPlayerBotV1(id){
 	this->init_params();
-//	this->learning_rate = learning_rate;
+	this->learning_rate = learning_rate;
 //	this->param_reg = learning_rate;
 	this->lead = false;
 }
@@ -31,18 +31,20 @@ PlayerBotV1::PlayerBotV1(string id):ParentPlayerBotV1(id){
 	this->lead = false;
 }
 
-void PlayerBotV1::init_params(default_random_engine& generator){
-	this->init_macro_params(generator);
-	this->init_learning_params();
-}
+//void PlayerBotV1::init_params(default_random_engine& generator){
+//	this->init_macro_params(generator);
+//	this->init_learning_params();
+//}
 
 void PlayerBotV1::init_params(){
 	ParentPlayerBotV1::init_params();
 }
 
-void PlayerBotV1::set_learning_rate(float learning_rate){
-	this->learning_rate = learning_rate;
+void PlayerBotV1::init_learning_params(){
+	this->param_lead = 0;
+	this->param_foll = 0;
 }
+
 
 void PlayerBotV1::init_macro_params(){
 	std::default_random_engine generator;
@@ -51,6 +53,10 @@ void PlayerBotV1::init_macro_params(){
 	std::normal_distribution<double> distribution_reg(1,0.01);
 	this->param_reg = (float)distribution_reg(generator);
 //	cout<<"learning_rate "<<this->learning_rate <<" param_reg "<<this->param_reg<<endl;
+}
+
+void PlayerBotV1::set_learning_rate(float learning_rate){
+	this->learning_rate = learning_rate;
 }
 
 void PlayerBotV1::init_macro_params(default_random_engine& generator){
@@ -65,28 +71,24 @@ void PlayerBotV1::mute_macro_params(){
 	this->init_macro_params();
 }
 
-void PlayerBotV1::mute_macro_params(list<PlayerBotV1*> & winning_players, default_random_engine& generator){
+void PlayerBotV1::mute_macro_params(default_random_engine& generator){
+	this->init_macro_params(generator);
+}
+
+void PlayerBotV1::mute_macro_params(list<AbstractPlayer*> & winning_players, default_random_engine& generator){
 	int rand_index = rand() % winning_players.size();
 	auto it = winning_players.begin();
 	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_lr((*it)->get_learning_rate(), 0.1);
+	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV1*>(*it)->get_learning_rate(), 0.1);
 	this->learning_rate = (float)distribution_lr(generator);
 
 	rand_index = rand() % winning_players.size();
 	it = winning_players.begin();
 	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_reg((*it)->get_param_reg(), 0.1);
+	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV1*>(*it)->get_param_reg(), 0.1);
 	this->param_reg = (float)distribution_lr(generator);
 }
 
-void PlayerBotV1::mute_macro_params(default_random_engine& generator){
-	this->init_macro_params(generator);
-}
-
-void PlayerBotV1::init_learning_params(){
-	this->param_lead = 0;
-	this->param_foll = 0;
-}
 
 float PlayerBotV1::get_learning_rate(){
 	return this->learning_rate;
@@ -179,7 +181,6 @@ AbstractPlayer::Action PlayerBotV1::play_river(){
 void PlayerBotV1::train(){
 //	cout<<"Stack "<<this->stake<<endl;
 //	cout<<"LOSS "<<this->loss<<endl;
-	float update_term;
 
 	if (this->lead){
 		if (this->loss < 0){

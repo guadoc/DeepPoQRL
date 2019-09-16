@@ -21,24 +21,24 @@ public:
 	PlayerBotV1(string id);
 	virtual ~PlayerBotV1();
 
+
 	void set_learning_rate(float);
-
-
-	void train();
-	void init_macro_params();
-	void init_macro_params(std::default_random_engine& generator);
-	void init_params(std::default_random_engine& generator);
-	void init_params();
-	void mute_macro_params();
-	void mute_macro_params(std::default_random_engine& generator);
-	void init_learning_params();
-
-	void mute_macro_params(list<PlayerBotV1*> &, default_random_engine& generator);
-
 	float get_learning_rate();
 	float get_param_reg();
 	float get_param_lead();
 	float get_param_foll();
+
+
+	void train();
+	void init_params();
+//	void init_params(std::default_random_engine& generator);
+	void init_learning_params() override;
+	void init_macro_params() override;
+	void init_macro_params(std::default_random_engine& generator) override;
+
+	void mute_macro_params();
+	void mute_macro_params(std::default_random_engine& generator);
+	void mute_macro_params(list<AbstractPlayer*> &, default_random_engine& generator) override;
 
 
 	Action play_preflop();
@@ -65,7 +65,6 @@ protected:
 	float learning_rate;
 	float param_reg;
 
-	float param_stat; //can be a vector
 	bool lead;
 	bool invest;
 
