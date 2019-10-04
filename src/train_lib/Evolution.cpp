@@ -7,31 +7,34 @@
 
 #include "Evolution.h"
 #include "../player_lib/PlayerBotV1.h"
+#include "../player_lib/PlayerBotV2.h"
 
 
 namespace std {
 
 Evolution::Evolution() {
-	this->n_hand_selection = 100;
+	this->n_hand_selection = 10;
 	this->n_generation = 5;
 	this->n_players = 6;
 	this->generator = std::default_random_engine();
 	for (unsigned int position=0; position < this->n_players; position++){
-		AbstractPlayer * p = new PlayerBotV1(to_string(position));
+		AbstractPlayer * p = new PlayerBotV2(to_string(position));
 		this->candidates.push_back(p);
 		((PlayerBot*)p)->init_macro_params(generator);
 		((PlayerBot*)p)->set_train_mode(true);
 	}
 	this->table = new TableTrain(this->candidates);
+	this->saving_folder = "./bots/";
 }
 
 Evolution::Evolution(vector<AbstractPlayer*>& players) {
 	this->n_hand_selection = 5000;
-		this->n_generation = 20;
-		this->n_players = 6;
-		this->generator = std::default_random_engine();
-		this->candidates = players;
-		this->table = new TableTrain(this->candidates);
+	this->n_generation = 20;
+	this->n_players = 6;
+	this->generator = std::default_random_engine();
+	this->candidates = players;
+	this->table = new TableTrain(this->candidates);
+	this->saving_folder = "./bots/";
 }
 
 Evolution::~Evolution() {
@@ -58,15 +61,16 @@ void Evolution::run_selection(){
 		this->table->play_hand();
 	}
 }
+
 static bool compare_players(AbstractPlayer * const & a, AbstractPlayer * const & b)
-	{
-	   return *a > *b;
-	}
+{
+   return *a > *b;
+}
 
 string Evolution::save_best_genome(){
 	std::sort(this->candidates.begin(), this->candidates.end(), compare_players);
 //	BOOST_SERIALIZATION_ASSUME_ABSTRACT( AbstractPlayer );
-	string folder = ".";
+	string folder = this->saving_folder + (*this->candidates.begin())->get_id();
 	(*this->candidates.begin())->save_to_folder(folder);
 	return folder;
 }
@@ -88,12 +92,6 @@ void Evolution::run_evolution(){
 	}
 	this->save_best_genome();
 }
-
-
-
-//void Evolution::update_generation_folder(){
-//	this->generation_folder = this->base_folder + "/" + to_string(this->generation);
-//}
 
 
 

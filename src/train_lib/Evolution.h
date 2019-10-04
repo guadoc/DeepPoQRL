@@ -25,7 +25,6 @@ public:
 	void run_evolution();
 	void run_mutations();
 	string save_best_genome();
-//	void update_generation_folder();
 
 private:
 	unsigned int n_players;
@@ -35,8 +34,8 @@ private:
 	unsigned int n_generation;
 	std::default_random_engine generator;
 
-	string generation_folder;
-	string base_folder;
+	string saving_folder;
+
 };
 
 } /* namespace std */

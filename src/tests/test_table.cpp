@@ -300,6 +300,38 @@ public:
 
 	}
 
+	int test_train_individual(){
+		cout<<"TRAIN SESSION"<<endl;
+		unsigned int n_player = 6;
+		vector<AbstractPlayer*> players;
+//			AbstractPlayer * p = new PlayerBotV2(to_string(0));
+//			((PlayerBot * )p)->set_train_mode(true);
+//			players.push_back(p);
+		for (unsigned int position=1; position < n_player; position++){
+			AbstractPlayer * p = new PlayerBotV2(to_string(position));
+			((PlayerBot * )p)->set_train_mode(false);
+			players.push_back(p);
+		}
+		AbstractPlayer * p = new PlayerBotV2(to_string(0));
+		((PlayerBot * )p)->set_train_mode(true);
+		players.push_back(p);
+		cout<<"Players initialized"<<endl;
+		AbstractTable* table = new TableTrain(players);
+		unsigned int n_hands = 100000;
+		clock_t start = clock();
+		for (unsigned int i =1; i<= n_hands; i++){
+			utils::progress_bar((float)i/(float)n_hands);
+			table->play_hand();
+			if(i%10==0){
+				cout<<table->to_str()<<endl;
+			}
+		}
+		clock_t stop = clock();
+		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
+		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
+		return 0;
+	}
+
 
 
 	int test_save_and_load_player(){

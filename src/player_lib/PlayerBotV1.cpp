@@ -138,8 +138,6 @@ float sigmoid(float x){
 }
 
 AbstractPlayer::Action PlayerBotV1::play_river(){
-//	std::random_device rd;
-//	std::mt19937 gen(rd());
 	float board_value = this->table->get_board_average_value();
 	float hand_relative_value = this->hand.get_full_hand_average_value()/ board_value ;
 //	cout<<"Player "<<this->pos_on_table<<" has hand value: "<<this->hand_relative_value<<endl;

@@ -124,6 +124,15 @@ void AbstractTable::distribute_street(AbstractTable::Street street){
 	}
 }
 
+unsigned int AbstractTable::count_in_hand(){
+	unsigned int n_in_hand = 0;
+	for (auto& p: this->players){
+		if(p->is_in_hand()){
+			n_in_hand++;
+		}
+	}
+	return n_in_hand;
+}
 
 
 void AbstractTable::init_hand(){

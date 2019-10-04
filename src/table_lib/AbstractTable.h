@@ -36,6 +36,7 @@ public:
 	vector<AbstractPlayer*> get_players() const;
 	Hand get_board() const;
 	unsigned int get_board_average_value();
+	unsigned int count_in_hand();
 
 	string to_str() const;
 
