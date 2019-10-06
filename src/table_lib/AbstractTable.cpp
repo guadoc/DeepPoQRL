@@ -429,7 +429,7 @@ void AbstractTable::play_hand(){
 	// RIVER
 	continue_action = this->run_full_street(AbstractTable::t_river, continue_action);
 
-	if (continue_action and this->pot >0){ //TODO check if it is "or"
+	if (continue_action and this->pot >0){
 		this->distribute_pot_to_best_hands();
 	}
 	if(this->side_pots.size()){

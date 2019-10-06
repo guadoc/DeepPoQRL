@@ -5,6 +5,7 @@
 #include "../deck_lib/Deck.h"
 #include "../player_lib/PlayerBotV1.h"
 #include "../player_lib/PlayerBotV2.h"
+#include "../player_lib/PlayerBotV21.h"
 #include "../player_lib/PlayerGUI.h"
 #include "../player_lib/PlayerLogs.h"
 #include "../train_lib/Session.h"
@@ -309,21 +310,23 @@ public:
 //			players.push_back(p);
 		for (unsigned int position=1; position < n_player; position++){
 			AbstractPlayer * p = new PlayerBotV2(to_string(position));
-			((PlayerBot * )p)->set_train_mode(false);
+			((PlayerBot * )p)->init_train_params();
+			((PlayerBot * )p)->set_train_mode(true);
 			players.push_back(p);
 		}
-		AbstractPlayer * p = new PlayerBotV2(to_string(0));
+		cout<<"New player"<<endl;
+		AbstractPlayer * p = new PlayerBotV2_1(to_string(0));
+		((PlayerBot * )p)->init_train_params();
 		((PlayerBot * )p)->set_train_mode(true);
 		players.push_back(p);
-		cout<<"Players initialized"<<endl;
 		AbstractTable* table = new TableTrain(players);
-		unsigned int n_hands = 100000;
+		unsigned int n_hands = 200000;
 		clock_t start = clock();
 		for (unsigned int i =1; i<= n_hands; i++){
 			utils::progress_bar((float)i/(float)n_hands);
 			table->play_hand();
 			if(i%10==0){
-				cout<<table->to_str()<<endl;
+//				cout<<table->to_str()<<endl;
 			}
 		}
 		clock_t stop = clock();

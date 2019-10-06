@@ -40,7 +40,7 @@ int main() {
 
 //	test.test_plot();
 //	test.test_save_and_load_player();
-	test.test_gui_player();
+//	test.test_gui_player();
 //	test.test_random_player();
 //	test.test_train_table();
 //	test.test_torch();
@@ -50,15 +50,10 @@ int main() {
 //	test.test_trained_player();
 
 //	test.test_evolution();
-//	test.test_train_individual();
+	test.test_train_individual();
 //	test.test_player_serialization();
 
-
 //	test.test_complete_average_value();
-
-
-
-
 
 	return 0;
 }

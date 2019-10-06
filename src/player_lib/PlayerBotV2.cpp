@@ -6,62 +6,79 @@
 
 PlayerBotV2::PlayerBotV2(void):ParentPlayerBotV2(){
 	this->id = "PlayerBotV2";
-	this->init_params();
-	this->optimizer = new optim::SGD(this->net.parameters(), this->learning_rate);
-}
-
-void PlayerBotV2::init_params(){
-	ParentPlayerBotV2::init_params();
 }
 
 PlayerBotV2::PlayerBotV2(string id):ParentPlayerBotV2(id){
 	this->id = "PlayerBotV2_" + id;
-	this->init_params();
 	this->learning_rate = learning_rate;
-	this->optimizer = new torch::optim::SGD(this->net.parameters(), this->learning_rate);
 }
 
 PlayerBotV2::PlayerBotV2(AbstractTable * table):ParentPlayerBotV2(table){
 	this->id = "PlayerBotV2";
-	this->init_params();
-	this->optimizer = new torch::optim::SGD(this->net.parameters(), this->learning_rate);
 }
 
 PlayerBotV2::PlayerBotV2(AbstractTable * table, unsigned int position):ParentPlayerBotV2(table, position){
 	this->id = "PlayerBotV2";
-	this->init_params();
-	this->optimizer = new torch::optim::SGD(this->net.parameters(), this->learning_rate);
+}
+
+
+void PlayerBotV2::init_macro_params(){
+//	this->learning_rate = 0.01;
+//	this->bet_pot_percentage = 0.51;
+//	this->coefficient_reg = 0.51;
+
+	this->learning_rate = 0.001;
+	this->bet_pot_percentage = 0.51;
+	this->coefficient_reg = 0.1;
 }
 
 void PlayerBotV2::init_learning_params(){
-
-//	this->net = std::make_shared<Net>(1, 1);
-	this->net = Net();
-
-//	this->dim_input = 1;
-//	unsigned int dim_output=1, dim_hidden = 10;
-//	this->net = nn::Sequential(
-//		nn::Linear(dim_input, dim_output),
-////		nn::Functional(torch::relu),
-////		nn::Linear(dim_hidden, dim_output),
-//		nn::Functional(torch::sigmoid)
-//	);
+	this->dim_input = 1;
+	this->dim_output = 1;
+	this->net = new Net(this->dim_input, this->dim_output);
+	this->optimizer = new torch::optim::SGD(this->net->parameters(), this->learning_rate);
 }
 
-void PlayerBotV2::init_macro_params(){
-	this->learning_rate = 0.01;
-	this->bet_pot_percentage = 0.51;
-	this->coefficient_reg = 0.01;
+
+void PlayerBotV2::init_macro_params(default_random_engine& generator){
+	std::normal_distribution<double> distribution_lr(0.1,0.1);
+	this->learning_rate = (float)distribution_lr(generator);
+	std::normal_distribution<double> distribution_reg(0.1,0.1);
+	this->coefficient_reg = (float)distribution_reg(generator);
+//	cout<<"Learning_rate "<<this->learning_rate <<" Param_reg "<<this->param_reg<<endl;
 }
+
 
 void PlayerBotV2::mute_macro_params(){
 	//TODO
 }
 
+void PlayerBotV2::mute_macro_params(default_random_engine& generator){
+	this->init_macro_params(generator);
+}
+
+void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, default_random_engine& generator){
+	int rand_index = rand() % winning_players.size();
+	auto it = winning_players.begin();
+	std::advance(it, rand_index);
+	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV2*>(*it)->get_learning_rate(), 0.1);
+	this->learning_rate = (float)distribution_lr(generator);
+
+	rand_index = rand() % winning_players.size();
+	it = winning_players.begin();
+	std::advance(it, rand_index);
+	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV2*>(*it)->get_coefficient_reg(), 0.1);
+	this->coefficient_reg = (float)distribution_lr(generator);
+}
+
+
+void PlayerBotV2::zero_grad(){
+	this->net->zero_grad();
+}
 
 void PlayerBotV2::init_hand(){
 	ParentPlayerBotV2::init_hand();
-	this->net.zero_grad();
+	this->zero_grad();
 }
 
 PlayerBotV2::~PlayerBotV2(void){}
@@ -82,18 +99,89 @@ AbstractPlayer::Action PlayerBotV2::play_preflop(){
 
 AbstractPlayer::Action PlayerBotV2::play_flop(){
 	return this->check_pot();
-	this->loss = 0;
 }
 
 AbstractPlayer::Action PlayerBotV2::play_turn(){
 	return this->check_pot();
 }
 
-Tensor PlayerBotV2::build_input(){
+torch::Tensor PlayerBotV2::build_input(){
 	float board_value = this->table->get_board_average_value();
 	float hand_relative_value = this->hand.get_full_hand_average_value()/ board_value ;
 	float input[] = {hand_relative_value};//, (float)(this->table->count_in_hand())/6.};
-	return torch::from_blob(input, {this->dim_input});
+	auto input_var = torch::from_blob(input, {1, this->dim_input}).clone();
+	return input_var;
+}
+
+AbstractPlayer::Action PlayerBotV2::play_river(){
+	this->loss = 0;
+	torch::Tensor input_var = this->build_input();
+//	cout<<"Player "<<this->pos_on_table<<endl;
+	this->output = ((Net*)(this->net))->forward(input_var);
+//	return this->check_pot();
+	return this->compute_rewards_and_select_action(this->output);
+}
+
+void PlayerBotV2::train(){
+//	cout<<"Player "<<this->pos_on_table<<endl;
+	Tensor error;
+//	cout<<this->learning_rate<<endl;
+//	cout<<this->coefficient_reg<<endl;
+//	cout<<this->output<<endl;
+	if (this->loss != 0){
+		cout<<"LOSS "<<this->loss<<endl;
+		float lo[] = {(float)this->loss};
+		auto q_value = log(this->action_value);
+		auto loss_value = torch::from_blob(lo, {1});
+		auto diff = q_value - loss_value;
+		error = diff * diff;
+	}
+	else{//Regularization to make the player more aggressive
+		cout<<"NO LOSS"<<endl;
+		cout<<this->output<<endl;
+		error = - this->coefficient_reg * this->output;
+	}
+	error.backward();
+	this->optimizer->step();
+//	cout<<"AFTER "<<endl;
+//	for (const auto& pair : this->net->named_parameters()) {
+//	  std::cout << pair.key() << ": " << pair.value() << endl;
+//	}
+}
+
+AbstractPlayer::Action PlayerBotV2::compute_rewards_and_select_action(Tensor & output_distrib){
+//	auto uniform = torch::rand(1)[0].item<float>();
+	Tensor one_tensor = torch::ones({1});
+	float pot = (float) this->table->get_pot();
+	float bet_value = (float)std::min(this->stake, (unsigned int)(this->bet_pot_percentage*this->table->get_pot()));
+	auto proba_win = sigmoid(output_distrib[0]);
+	if (this->table->get_last_raise() != 0){// there is a bet from another player: raise_pot, call_pot or fold_pot
+		int call_value = (int)this->table->get_last_raise() - (int)this->commitment;
+		auto eQ_call = exp(proba_win * (pot + 2 * call_value) - call_value);
+		if(eQ_call.item<float>() > one_tensor[0].item<float>()){
+			this->action_value = eQ_call;
+			return this->call_pot();
+		}
+		else{
+			this->action_value = one_tensor; //regularization
+			return this->fold_pot();
+		}
+	}
+	else{// no bet from previous players
+//		unsigned int value_bet = (unsigned int ) (0.5* (float)std::min(this->stake, this->table->get_pot()));
+		auto eQ_bet = exp(proba_win * (pot + 2 * bet_value) - bet_value);
+		auto eQ_check = exp(proba_win * pot);
+		if(eQ_bet.item<float>() > eQ_check.item<float>()){
+			this->action_value = eQ_bet;
+			return this->bet_pot(bet_value);
+		}
+		else{
+			this->action_value = eQ_check; //regularization
+			return this->check_pot();
+		}
+	}
+	return this->fold_pot();
+
 }
 
 //AbstractPlayer::Action PlayerBotV2::compute_reward_and_select_action(Tensor & output_distrib){
@@ -150,82 +238,8 @@ Tensor PlayerBotV2::build_input(){
 //}
 
 
-AbstractPlayer::Action PlayerBotV2::compute_reward_and_select_action(Tensor & output_distrib){
-//	auto uniform = torch::rand(1)[0].item<float>();
-	Tensor one_tensor = torch::ones({1});
-	float pot = (float) this->table->get_pot();
-	float bet_value = (float)std::min(this->stake, (unsigned int)(this->bet_pot_percentage*this->table->get_pot()));
-	auto proba_win = output_distrib[0];
-	if (this->table->get_last_raise() != 0){// there is a bet from another player: raise_pot, call_pot or fold_pot
-		int call_value = (int)this->table->get_last_raise() - (int)this->commitment;
-		auto eQ_call = exp(proba_win * (pot + 2 * call_value) - call_value);
-		if(eQ_call.item<float>() > one_tensor[0].item<float>()){
-			this->action_value = eQ_call;
-			return this->call_pot();
-		}
-		else{
-			this->action_value = one_tensor; //regularization
-			return this->fold_pot();
-		}
-	}
-	else{// no bet from previous players
-//		unsigned int value_bet = (unsigned int ) (0.5* (float)std::min(this->stake, this->table->get_pot()));
-		auto eQ_bet = exp(proba_win * (pot + 2 * bet_value) - bet_value);
-		auto eQ_check = exp(proba_win * pot);
-		if(eQ_bet.item<float>() > eQ_check.item<float>()){
-			this->action_value = eQ_bet;
-			return this->bet_pot(bet_value);
-		}
-		else{
-			this->action_value = eQ_check; //regularization
-			return this->check_pot();
-		}
-	}
-	return this->fold_pot();
-
-}
-
-AbstractPlayer::Action PlayerBotV2::play_river(){
-	this->input = this->build_input();
-	auto decision_output = this->net.forward(this->input);
-	return this->compute_reward_and_select_action(decision_output);
-}
-
-void PlayerBotV2::train(){
-	if (this->loss != 0){
-		float lo[] = {this->loss};
-		auto diff = log(this->action_value) - torch::from_blob(lo, {1});
-		auto loss_value = diff * diff;
-//				torch::mse_loss(log(this->action_value)[0], torch::from_blob(lo, {1})[0]);
-		loss_value.backward();
-		this->optimizer->step();
-	}
-}
 
 
-void PlayerBotV2::init_macro_params(default_random_engine& generator){
-	std::normal_distribution<double> distribution_lr(1,0.1);
-	this->learning_rate = (float)distribution_lr(generator);
-	std::normal_distribution<double> distribution_reg(1,0.1);
-	this->coefficient_reg = (float)distribution_reg(generator);
-//	cout<<"Learning_rate "<<this->learning_rate <<" Param_reg "<<this->param_reg<<endl;
-}
 
-void PlayerBotV2::mute_macro_params(default_random_engine& generator){
-	this->init_macro_params(generator);
-}
 
-void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, default_random_engine& generator){
-	int rand_index = rand() % winning_players.size();
-	auto it = winning_players.begin();
-	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV2*>(*it)->get_learning_rate(), 0.1);
-	this->learning_rate = (float)distribution_lr(generator);
-
-	rand_index = rand() % winning_players.size();
-	it = winning_players.begin();
-	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV2*>(*it)->get_coefficient_reg(), 0.1);
-	this->coefficient_reg = (float)distribution_lr(generator);
-}
 

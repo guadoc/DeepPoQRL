@@ -10,7 +10,7 @@
 
 #include <random>
 
-#define DEBUG 0
+//#define DEBUG 0
 
 #if DEBUG > 0
 	#include "PlayerLogs.h"
@@ -38,14 +38,15 @@ public:
 	void update_stats();
 	void set_train_mode(bool);
 
-	void init_params();
+
+	void init_train_params();
+	virtual void train() = 0;
+	virtual void init_learning_params()=0;
 	virtual void init_macro_params()=0;
 	virtual void mute_macro_params()=0;
 	virtual void init_macro_params(std::default_random_engine& generator)=0;
 	virtual void mute_macro_params(list<AbstractPlayer*> &, std::default_random_engine&) = 0;
-//	virtual void mute_macro_params(std::default_random_engine& generator)=0;
-	virtual void init_learning_params()=0;
-	virtual void train() = 0;
+
 
 	virtual Action play_preflop()=0;
 	virtual Action play_flop()=0;

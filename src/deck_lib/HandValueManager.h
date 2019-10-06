@@ -48,7 +48,7 @@ public:
 
 
 	static unordered_map<string, float> * fill_value_map_5among7_and_save(string folder){
-		unordered_map<string, float> * map_2among7;
+//		unordered_map<string, float> * map_2among7;
 		unordered_map<string, float> * map_5among7;
 
 		unsigned int avg_2 = 0;

@@ -56,7 +56,7 @@ void PlayerBot::set_train_mode(bool train_mode){
 	this->train_mode = train_mode;
 }
 
-void PlayerBot::init_params(){
+void PlayerBot::init_train_params(){
 	this->init_macro_params();
 	this->init_learning_params();
 }
