@@ -55,7 +55,7 @@ public:
 		player.save_to_folder(".");
 
 		PlayerBotV1 new_player = PlayerBotV1();
-		new_player.load_from_file("./PlayerBotV1");
+		new_player.load_from_folder("./PlayerBotV1");
 		cout<<new_player.get_stake()<<endl;
 		cout<<new_player.get_learning_rate()<<endl;
 
@@ -266,11 +266,55 @@ public:
 	}
 
 
+	int save_n_load_net(){
+//		TORCH_MODULE(Net);
+		struct Net : torch::nn::Module {
+			Net() {
+				W = register_parameter("W", torch::randn({1, 1}));
+				b = register_parameter("b", -torch::randn(1));
+			}
+			torch::Tensor forward(torch::Tensor input) {
+				return torch::addmm(b, input, W);
+			}
+			torch::Tensor W, b;
+		};
+
+		Net * net = new Net();
+
+		nn::Sequential Net_2(
+				*net
+//				Net()
+		);
+
+	//	Net_2* net = new Net_2();
+		float input_tab [] = {0.1};
+		auto input = torch::from_blob(input_tab, {1, 1}).clone();
+	//	auto input = torch::randn({1, 1});
+		auto output = Net_2->forward(input);
+		cout<<output<<endl;
+//
+		string path = "./net.q";
+//		torch::save(Net_2, path);
+
+		cout<<"LOADING"<<endl;
+
+		nn::Sequential net2(
+				*net
+		);
+		torch::load(net2, path);
+		auto output_2 = net2->forward(input);
+		cout<<output_2<<endl;
+
+		return 0;
+	}
+
+
+
 	int test_trained_player(){
 		unsigned int n_player = 6;
 		vector<AbstractPlayer*> players;
 		AbstractPlayer * p = new PlayerBotV1(to_string(0), 0.1);
-		p->load_from_file("./4");
+		p->load_from_folder("./4");
 		((PlayerBot*)p)->set_train_mode(false);
 		players.push_back(p);
 
@@ -318,9 +362,12 @@ public:
 		AbstractPlayer * p = new PlayerBotV2_1(to_string(0));
 		((PlayerBot * )p)->init_train_params();
 		((PlayerBot * )p)->set_train_mode(true);
+//		((PlayerBotV2_1*)p)->load_from_folder("./bots");
+		p->init_bank_roll();
+
 		players.push_back(p);
 		AbstractTable* table = new TableTrain(players);
-		unsigned int n_hands = 200000;
+		unsigned int n_hands = 20000;
 		clock_t start = clock();
 		for (unsigned int i =1; i<= n_hands; i++){
 			utils::progress_bar((float)i/(float)n_hands);
@@ -329,6 +376,7 @@ public:
 //				cout<<table->to_str()<<endl;
 			}
 		}
+		((PlayerBotV2*)p)->save_to_folder("./bots");
 		clock_t stop = clock();
 		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
 		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
@@ -346,7 +394,7 @@ public:
 		player.save_to_folder(filename);
 		AbstractPlayer new_player;
 //		PlayerBotV1 new_player;
-		new_player.load_from_file(filename);
+		new_player.load_from_folder(filename);
 		cout<<"new player"<<endl;
 		cout<<new_player.get_stake()<<endl;
 		return 0;

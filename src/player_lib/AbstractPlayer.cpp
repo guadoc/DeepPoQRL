@@ -4,6 +4,8 @@
 #include "../table_lib/AbstractTable.h"
 #include "../utils/utils.h"
 
+#include <sys/stat.h>
+
 
 #define BASE_STAKE 100
 #define BANK_ROLL 100000
@@ -68,21 +70,26 @@ unsigned int AbstractPlayer::get_initial_bank_roll(){
 }
 
 
-void AbstractPlayer::save_to_folder(string folder_name) const {
-	string filename = folder_name + "/" + this->id;
+string AbstractPlayer::save_to_folder(string folder_name) const {
+	string folder_to_save = folder_name + "/" + this->id;
+	const int dir_err = mkdir(folder_to_save.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	string filename = folder_to_save + "/setup.p";
 	std::ofstream ofs(filename);
 	boost::archive::binary_oarchive oa(ofs);
 	this->transfert_out(oa);
-	cout<<"Player saved in folder "<<filename<<endl;
+	cout<<"Player saved in folder "<<folder_to_save<<endl;
+	return folder_to_save;
 }
 void AbstractPlayer::transfert_out(boost::archive::binary_oarchive &oa) const{
 	oa << *this;
 }
 
-void AbstractPlayer::load_from_file(string filename) {
-	ifstream ifs(filename);
+string AbstractPlayer::load_from_folder(string foldername) {
+	string folder_to_load = foldername + "/" + this->id;
+	ifstream ifs(folder_to_load + "/setup.p");
 	boost::archive::binary_iarchive iarch(ifs);
 	this->transfert_in(iarch);
+	return folder_to_load;
 }
 void AbstractPlayer::transfert_in(boost::archive::binary_iarchive & iarch){
 	iarch >> *this;

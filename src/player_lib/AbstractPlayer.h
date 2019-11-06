@@ -89,8 +89,8 @@ public:
 
 	virtual void transfert_in(boost::archive::binary_iarchive & iarch);
 	virtual void transfert_out(boost::archive::binary_oarchive &oa) const;
-	void save_to_folder(string) const;
-	void load_from_file(string);
+	virtual string save_to_folder(string) const;
+	virtual string load_from_folder(string);
 
 	friend class boost::serialization::access;
 	template<class Archive>

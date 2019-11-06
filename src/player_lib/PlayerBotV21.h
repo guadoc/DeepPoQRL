@@ -20,14 +20,18 @@ struct NetV2_1 : torch::nn::Module {
     W_opened = register_parameter("W_opened", torch::ones({N, M}));
 	b_opened = register_parameter("b_opened", -torch::ones(M));
   }
-  torch::Tensor forward(torch::Tensor input, bool initiative) {
-	  if (initiative){
-		  return torch::addmm(b_initiative, input, W_initiative);
-	  }
-	  else{
-		  return torch::addmm(b_opened, input, W_opened);
-	  }
+//  torch::Tensor forward(torch::Tensor input, bool initiative) {
+//	  if (initiative){
+//		  return torch::addmm(b_initiative, input, W_initiative);
+//	  }
+//	  else{
+//		  return torch::addmm(b_opened, input, W_opened);
+//	  }
+//  }
+  torch::Tensor forward(torch::Tensor input) {
+	  return torch::addmm(b_initiative, input, W_initiative);
   }
+
   torch::Tensor b_initiative, b_opened, W_initiative, W_opened;
 };
 
@@ -45,7 +49,7 @@ public:
 	AbstractPlayer::Action play_river();
 
 protected:
-	NetV2_1* net;
+//	NetV2_1* net;
 //	Net* net_opened;
 };
 

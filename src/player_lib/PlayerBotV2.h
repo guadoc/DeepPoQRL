@@ -61,10 +61,15 @@ public:
 	Action select_action_from_distribution(Tensor&);
 	virtual Action compute_rewards_and_select_action(Tensor&);
 
+	string save_to_folder(string);
+	string load_from_folder(string);
+
 
 protected:
 	torch::optim::SGD * optimizer;
-	Net * net;
+//	Net * net;
+	nn::Sequential net;
+
 	unsigned int dim_input;
 	unsigned int dim_output;
 	torch::Tensor input;

@@ -52,6 +52,7 @@ int main() {
 //	test.test_evolution();
 	test.test_train_individual();
 //	test.test_player_serialization();
+//	test.save_n_load_net();
 
 //	test.test_complete_average_value();
 

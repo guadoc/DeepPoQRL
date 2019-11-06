@@ -40,8 +40,9 @@ void PlayerBotV2_1::zero_grad(){
 void PlayerBotV2_1::init_learning_params() {
 	this->dim_input = 1;
 	this->dim_output = 1;
-	this->net = new NetV2_1(this->dim_input, this->dim_output);
+	NetV2_1* net_ = new NetV2_1(this->dim_input, this->dim_output);
 //	this->net_initiate = new Net(this->dim_input, this->dim_output);
+	this->net = nn::Sequential(*net_);
 	this->optimizer = new torch::optim::SGD(this->net->parameters(), this->learning_rate);
 }
 
@@ -52,7 +53,7 @@ AbstractPlayer::Action PlayerBotV2_1::play_river(){
 	}
 	this->loss = 0;
 	torch::Tensor input_var = this->build_input();
-	this->output = this->net->forward(input_var, this->table->get_last_raise() == 0);
+	this->output = this->net->forward(input_var);//, this->table->get_last_raise() == 0);
 	return this->compute_rewards_and_select_action(this->output);
 }
 

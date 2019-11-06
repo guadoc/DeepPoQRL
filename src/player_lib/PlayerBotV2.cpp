@@ -35,7 +35,11 @@ void PlayerBotV2::init_macro_params(){
 void PlayerBotV2::init_learning_params(){
 	this->dim_input = 1;
 	this->dim_output = 1;
-	this->net = new Net(this->dim_input, this->dim_output);
+//	this->net = new Net(this->dim_input, this->dim_output);
+	Net* net_ = new Net(this->dim_input, this->dim_output);
+	this->net = nn::Sequential(
+			*net_
+	);
 	this->optimizer = new torch::optim::SGD(this->net->parameters(), this->learning_rate);
 }
 
@@ -69,6 +73,18 @@ void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, def
 	std::advance(it, rand_index);
 	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV2*>(*it)->get_coefficient_reg(), 0.1);
 	this->coefficient_reg = (float)distribution_lr(generator);
+}
+
+string PlayerBotV2::save_to_folder(string folder){
+	string folder_to_save = ParentPlayerBotV2::save_to_folder(folder);
+	torch::save(this->net, folder_to_save + "/player_weights.q");
+	return folder_to_save;
+}
+
+string PlayerBotV2::load_from_folder(string folder){
+	string folder_to_load = ParentPlayerBotV2::load_from_folder(folder);
+	torch::load(this->net, folder_to_load + "/player_weights.q");
+	return folder_to_load;
 }
 
 
@@ -117,7 +133,7 @@ AbstractPlayer::Action PlayerBotV2::play_river(){
 	this->loss = 0;
 	torch::Tensor input_var = this->build_input();
 //	cout<<"Player "<<this->pos_on_table<<endl;
-	this->output = ((Net*)(this->net))->forward(input_var);
+	this->output = this->net->forward(input_var);
 //	return this->check_pot();
 	return this->compute_rewards_and_select_action(this->output);
 }
