@@ -512,19 +512,20 @@ string AbstractTable::to_str() const {
 		+ ", Board: "+ this->board.to_str()
 		+ "\n";
 
-
-	str += "Side pots: ";
-	auto player_list = this->side_pots_player_list.begin();
-	for(auto pot = this->side_pots.begin(); pot != this->side_pots.end(); pot++){
-		str += to_string(*pot);
-		str += "[";
-		for (auto player = player_list->begin(); player != player_list->end(); player++){
-			str+= to_string((*player)->get_pos_on_table());
-			str+= ',';
+	if (this->side_pots.size() > 0){
+		str += "Side pots: ";
+		auto player_list = this->side_pots_player_list.begin();
+		for(auto pot = this->side_pots.begin(); pot != this->side_pots.end(); pot++){
+			str += to_string(*pot);
+			str += "[";
+			for (auto player = player_list->begin(); player != player_list->end(); player++){
+				str+= to_string((*player)->get_pos_on_table());
+				str+= ',';
+			}
+			str += "]";
+			str += + ", ";
+			player_list++;
 		}
-		str += "]";
-		str += + ", ";
-		player_list++;
 	}
 
 	for (unsigned int i = 0; i < this->n_players; i++){

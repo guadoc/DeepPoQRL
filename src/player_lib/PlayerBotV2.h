@@ -11,17 +11,6 @@ using namespace torch;
 
 using ParentPlayerBotV2 = PlayerBot;
 
-struct Net : torch::nn::Module {
-  Net(int64_t N, int64_t M) {
-    W = register_parameter("W", torch::ones({N, M}));
-    b = register_parameter("b", -torch::ones(M));
-  }
-  torch::Tensor forward(torch::Tensor input){
-    return torch::addmm(b, input, W);
-  }
-  torch::Tensor W, b;
-};
-
 class PlayerBotV2 : public ParentPlayerBotV2{
 
 public:
@@ -39,12 +28,13 @@ public:
 	void train();
 
 	virtual void init_learning_params() override;
-	virtual void init_macro_params() override;
-	void init_macro_params(std::default_random_engine& generator) override;
 
-	void mute_macro_params();
-	void mute_macro_params(std::default_random_engine& generator);
-	void mute_macro_params(list<AbstractPlayer*> &, default_random_engine& generator) override;
+	virtual void init_macro_params() override;
+	virtual void init_macro_params(std::default_random_engine& generator) override;
+
+	virtual void mute_macro_params();
+	virtual void mute_macro_params(std::default_random_engine& generator);
+	virtual void mute_macro_params(list<AbstractPlayer*> &, default_random_engine& generator) override;
 
 
 	Action play_preflop();
@@ -61,20 +51,19 @@ public:
 	Action select_action_from_distribution(Tensor&);
 	virtual Action compute_rewards_and_select_action(Tensor&);
 
-	string save_to_folder(string);
-	string load_from_folder(string);
+	string save_to_folder(string) const;
+	string load_from_folder(string) ;
 
 
 protected:
-	torch::optim::SGD * optimizer;
-//	Net * net;
-	nn::Sequential net;
 
 	unsigned int dim_input;
 	unsigned int dim_output;
 	torch::Tensor input;
 	torch::Tensor output;
 	torch::Tensor action_value;
+	nn::Sequential river_net;
+	torch::optim::SGD * optimizer;
 
 	/* macro parameters */
 	float learning_rate;

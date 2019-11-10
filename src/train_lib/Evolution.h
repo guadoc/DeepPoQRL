@@ -17,14 +17,22 @@ class Evolution {
 public:
 	Evolution();
 	Evolution(vector<AbstractPlayer*>&);
+	Evolution(vector<AbstractPlayer*>& players, unsigned int n_generation, unsigned int n_hand_selection);
 	virtual ~Evolution();
+
+	void init_players_macro_params();
 
 	list<AbstractPlayer*> select_survivors(vector<AbstractPlayer *> &);
 	bool survived(AbstractPlayer *);
 	void run_selection();
-	void run_evolution();
 	void run_mutations();
 	string save_best_genome();
+	string save_best_genome(string folder);
+
+	void run_evolution();
+	void run_evolution(string folder);
+
+	int train_player(AbstractPlayer *, vector<AbstractPlayer*>);
 
 private:
 	unsigned int n_players;

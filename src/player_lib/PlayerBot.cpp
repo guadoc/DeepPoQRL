@@ -61,6 +61,11 @@ void PlayerBot::init_train_params(){
 	this->init_learning_params();
 }
 
+void PlayerBot::init_train_params(std::default_random_engine& generator){
+	this->init_macro_params(generator);
+	this->init_learning_params();
+}
+
 
 void PlayerBot::close_hand(){
 	ParentPlayerBot::close_hand();

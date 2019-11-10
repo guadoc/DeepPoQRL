@@ -34,6 +34,45 @@ public:
 	}
 
 
+	int test_train_individual(){
+		unsigned int n_player = 6;
+		vector<AbstractPlayer*> players;
+		for (unsigned int position=1; position < n_player; position++){
+			AbstractPlayer * p = new PlayerBotV1(to_string(position));
+			((PlayerBot * )p)->init_train_params();
+			((PlayerBot * )p)->set_train_mode(true);
+			players.push_back(p);
+		}
+		AbstractPlayer * p = new PlayerBotV2(to_string(0));
+		((PlayerBot * )p)->init_train_params();
+//		((PlayerBotV2*)p)->load_from_folder("./bot");
+		((PlayerBot * )p)->set_train_mode(false);
+		players.push_back(p);
+
+		Evolution evolution = Evolution(players);
+
+		clock_t start = clock();
+		evolution.run_selection();
+		clock_t stop = clock();
+		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
+		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
+
+		//	((PlayerBotV2*)player)->save_to_folder("./bot");
+		return 0;
+	}
+
+
+	int test_heritage(){
+		AbstractPlayer *p1 = new AbstractPlayer();
+		p1->save_to_folder("./bot");
+		cout<<"other player"<<endl;
+		AbstractPlayer *p2 = new PlayerBotV2();
+//		((PlayerBotV2*)p2)->init_train_params();
+		((PlayerBotV2*)p2)->init_train_params();
+		p2->save_to_folder("./bot");
+		return 0;
+	}
+
 	int test_player_serialization(){
 //		AbstractPlayer player = AbstractPlayer();
 //		player.add_to_stake(333);
@@ -43,9 +82,6 @@ public:
 //		AbstractPlayer new_player = AbstractPlayer();
 //		new_player.load_from_file("./AbstractPlayer");
 //		cout<<new_player.get_stake()<<endl;
-
-//		BOOST_SERIALIZATION_ASSUME_ABSTRACT( AbstractPlayer);
-//		BOOST_SERIALIZATION_ASSUME_ABSTRACT( PlayerBotV1);
 
 		PlayerBotV1 player = PlayerBotV1();
 		player.add_to_stake(333);
@@ -65,7 +101,6 @@ public:
 	int test_torch(){
 		float param[] = {1.};
 		float input[] = {0.5};
-
 
 		torch::Tensor tensor_param = torch::from_blob(param, {1}, torch::requires_grad());
 		torch::Tensor tensor_input = torch::from_blob(input, {1});
@@ -92,28 +127,6 @@ public:
 	}
 
 
-
-//	int test_session(){
-//		vector<AbstractPlayer*> players;
-//
-//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_1", 0.0));
-//		players.push_back(new PlayerBotV2("PlayerBotV2_lr-0.1", 0.0001));
-//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_2", 0.0));
-//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_3", 0.0));
-//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_4", 0.0));
-//		players.push_back(new PlayerBotV2("PlayerBotV1_lr-0_5", 0.0));
-//
-//		Session sess = Session(players);
-//		unsigned int n_hands = 100000;
-//		sess.run(n_hands);
-//		return 0;
-//	}
-
-
-
-
-
-
 	int test_graphic_table(){
 		unsigned int n_player = 6;
 		vector<AbstractPlayer*> players;
@@ -128,8 +141,6 @@ public:
 		return 0;
 
 	}
-
-
 
 
 	int test_gui_player(){
@@ -218,9 +229,7 @@ public:
 		cout<<"Players initialized"<<endl;
 		AbstractTable* table = new TableTrain(players);
 		clock_t start = clock();
-
 		list<AbstractPlayer*> winning_players;
-
 		for (unsigned int gen = 1; gen <= n_generation; gen++){
 			cout<<"GENERATION "<<gen<<endl;
 			cout<<table->to_str()<<endl;
@@ -230,8 +239,6 @@ public:
 //				utils::progress_bar((float)i/(float)n_hand_generation);
 				table->play_hand();
 			}
-
-
 			cout<<table->to_str()<<endl;
 			winning_players.clear();
 			//Select models (natural selection)
@@ -278,33 +285,26 @@ public:
 			}
 			torch::Tensor W, b;
 		};
-
 		Net * net = new Net();
-
 		nn::Sequential Net_2(
 				*net
 //				Net()
 		);
-
 	//	Net_2* net = new Net_2();
 		float input_tab [] = {0.1};
 		auto input = torch::from_blob(input_tab, {1, 1}).clone();
 	//	auto input = torch::randn({1, 1});
 		auto output = Net_2->forward(input);
 		cout<<output<<endl;
-//
 		string path = "./net.q";
 //		torch::save(Net_2, path);
-
 		cout<<"LOADING"<<endl;
-
 		nn::Sequential net2(
 				*net
 		);
 		torch::load(net2, path);
 		auto output_2 = net2->forward(input);
 		cout<<output_2<<endl;
-
 		return 0;
 	}
 
@@ -345,44 +345,6 @@ public:
 
 	}
 
-	int test_train_individual(){
-		cout<<"TRAIN SESSION"<<endl;
-		unsigned int n_player = 6;
-		vector<AbstractPlayer*> players;
-//			AbstractPlayer * p = new PlayerBotV2(to_string(0));
-//			((PlayerBot * )p)->set_train_mode(true);
-//			players.push_back(p);
-		for (unsigned int position=1; position < n_player; position++){
-			AbstractPlayer * p = new PlayerBotV2(to_string(position));
-			((PlayerBot * )p)->init_train_params();
-			((PlayerBot * )p)->set_train_mode(true);
-			players.push_back(p);
-		}
-		cout<<"New player"<<endl;
-		AbstractPlayer * p = new PlayerBotV2_1(to_string(0));
-		((PlayerBot * )p)->init_train_params();
-		((PlayerBot * )p)->set_train_mode(true);
-//		((PlayerBotV2_1*)p)->load_from_folder("./bots");
-		p->init_bank_roll();
-
-		players.push_back(p);
-		AbstractTable* table = new TableTrain(players);
-		unsigned int n_hands = 20000;
-		clock_t start = clock();
-		for (unsigned int i =1; i<= n_hands; i++){
-			utils::progress_bar((float)i/(float)n_hands);
-			table->play_hand();
-			if(i%10==0){
-//				cout<<table->to_str()<<endl;
-			}
-		}
-		((PlayerBotV2*)p)->save_to_folder("./bots");
-		clock_t stop = clock();
-		double elapsed = (double)(stop - start) / CLOCKS_PER_SEC;
-		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
-		return 0;
-	}
-
 
 
 	int test_save_and_load_player(){
@@ -400,7 +362,23 @@ public:
 		return 0;
 	}
 
+	int test_save_and_load_playerV2(){
+		string folder = "./bot";
+		AbstractPlayer* player = new PlayerBotV2();
+		((PlayerBot *)player)->init_learning_params();
+		cout<<player->get_stake()<<endl;
+		player->add_to_stake(677);
+		cout<<player->get_stake()<<endl;
+		((PlayerBotV2 *)player)->save_to_folder(folder);
+		cout<<player->get_stake()<<endl;
 
+//		PlayerBotV2 new_player = PlayerBotV2();
+//		cout<<new_player.get_stake()<<endl;
+//		new_player.load_from_folder(folder);
+//		cout<<"new player"<<endl;
+//		cout<<new_player.get_stake()<<endl;
+		return 0;
+	}
 
 
 	int test_plot(){
@@ -415,7 +393,6 @@ public:
 		unsigned int n_points_max = 1000;
 		utils::plot(list, max_value, min_value, n_points_max);
 		return 0;
-
 	}
 
 	int test_complete_average_value(){
@@ -434,7 +411,6 @@ public:
 		float mc_average_value = hand.monte_carlo_average_value(7, n_monte_carlo );
 		cout<<"monte carlo average "<<mc_average_value<<endl;
 		cout<<hand.to_str()<<endl;
-
 		return 0;
 	}
 

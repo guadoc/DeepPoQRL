@@ -23,6 +23,7 @@ AbstractPlayer::AbstractPlayer(void){
 	this->pos_on_table = 0;
 	this->_is_in_hand = true;
 	this->open_hand = false;
+	this->auto_rebuy = true;
 
 }
 
@@ -36,13 +37,12 @@ AbstractPlayer::AbstractPlayer(AbstractTable *table):AbstractPlayer(){
 
 AbstractPlayer::AbstractPlayer(AbstractTable *table, unsigned int position):AbstractPlayer(table){
 	this->pos_on_table = position;
-	this->id = to_string(position); //TODO temporary
+	this->id = this->id + to_string(position); //TODO temporary
 }
 
 void AbstractPlayer::init_bank_roll(){
 	this->bank_roll = this->initial_bank_roll - this->base_stake;
 	this->stake  = this->base_stake;
-	this->auto_rebuy = true;
 }
 
 bool AbstractPlayer::operator>=(const AbstractPlayer &player){
@@ -70,8 +70,10 @@ unsigned int AbstractPlayer::get_initial_bank_roll(){
 }
 
 
-string AbstractPlayer::save_to_folder(string folder_name) const {
-	string folder_to_save = folder_name + "/" + this->id;
+string AbstractPlayer::save_to_folder(string foldername) const {
+	cout<<"Saving "<<this->id<<" in "<<foldername<<endl;
+	cout<<"Abstract"<<endl;
+	string folder_to_save = foldername + "/" + this->id;
 	const int dir_err = mkdir(folder_to_save.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	string filename = folder_to_save + "/setup.p";
 	std::ofstream ofs(filename);
@@ -84,7 +86,8 @@ void AbstractPlayer::transfert_out(boost::archive::binary_oarchive &oa) const{
 	oa << *this;
 }
 
-string AbstractPlayer::load_from_folder(string foldername) {
+string AbstractPlayer::load_from_folder(string foldername){
+	cout<<"Loading "<<this->id<<" from "<<foldername<<endl;
 	string folder_to_load = foldername + "/" + this->id;
 	ifstream ifs(folder_to_load + "/setup.p");
 	boost::archive::binary_iarchive iarch(ifs);
@@ -246,7 +249,7 @@ AbstractPlayer::Action AbstractPlayer::raise_pot(unsigned int value){
 	 */
 	if(value < this->stake + this->commitment){ //The player is not all in
 		if (value  < this->table->get_diff_last_raises() + this->table->get_last_raise()){// the value of the raise is not standard
-			throw std::invalid_argument("Error: invalide raise value from player "
+			throw std::invalid_argument("Error: invalid raise value from player "
 										+ this->id
 										+ "\n"
 										+"Last raise/bet was "
@@ -273,9 +276,8 @@ AbstractPlayer::Action AbstractPlayer::raise_pot(unsigned int value){
 
 
 AbstractPlayer::Action AbstractPlayer::bet_pot(unsigned int value){
-//	if(this->table->get_last_raise() != 0){
 	if(this->table->get_last_raise() > this->commitment){
-		throw std::invalid_argument("last raise was "
+		throw std::invalid_argument("Last raise was "
 									+ to_string(this->table->get_last_raise())
 									+"\n Bet from player "
 									+ this->id
@@ -303,7 +305,7 @@ AbstractPlayer::Action AbstractPlayer::fold_pot(){
 
 AbstractPlayer::Action AbstractPlayer::check_pot(){
 	if(this->table->get_last_raise() != 0 and this->table->get_last_raise() != this->commitment){
-		throw std::invalid_argument("last raise was "
+		throw std::invalid_argument("Last raise was "
 									+ to_string(this->table->get_last_raise())
 									+ "\n Check from sit "
 									+ to_string(this->pos_on_table)

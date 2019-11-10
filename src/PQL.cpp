@@ -11,6 +11,7 @@
 #include <iostream>
 #include "tests/test_deck.cpp"
 #include "tests/test_table.cpp"
+#include "tests/runs.cpp"
 
 
 using namespace std;
@@ -50,11 +51,15 @@ int main() {
 //	test.test_trained_player();
 
 //	test.test_evolution();
-	test.test_train_individual();
+//	test.test_train_individual();
+//	test.test_save_and_load_playerV2();
 //	test.test_player_serialization();
 //	test.save_n_load_net();
+//	test.test_heritage();
 
 //	test.test_complete_average_value();
 
+	Runs run = Runs();
+	run.run_evolution();
 	return 0;
 }

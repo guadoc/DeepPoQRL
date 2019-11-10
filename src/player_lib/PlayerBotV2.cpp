@@ -4,43 +4,60 @@
 
 //#include <random>
 
+struct Net : torch::nn::Module {
+  Net(int64_t N, int64_t M) {
+    W = register_parameter("W", torch::ones({N, M}));
+    b = register_parameter("b", -torch::ones(M));
+  }
+  torch::Tensor forward(torch::Tensor input){
+    return torch::addmm(b, input, W);
+  }
+  torch::Tensor W, b;
+};
+
 PlayerBotV2::PlayerBotV2(void):ParentPlayerBotV2(){
 	this->id = "PlayerBotV2";
+	this->dim_input = 1;
+	this->dim_output = 1;
+	this->init_macro_params();
 }
 
 PlayerBotV2::PlayerBotV2(string id):ParentPlayerBotV2(id){
 	this->id = "PlayerBotV2_" + id;
-	this->learning_rate = learning_rate;
+	this->dim_input = 1;
+	this->dim_output = 1;
+	this->init_macro_params();
 }
 
 PlayerBotV2::PlayerBotV2(AbstractTable * table):ParentPlayerBotV2(table){
 	this->id = "PlayerBotV2";
+	this->dim_input = 1;
+	this->dim_output = 1;
+	this->init_macro_params();
 }
 
 PlayerBotV2::PlayerBotV2(AbstractTable * table, unsigned int position):ParentPlayerBotV2(table, position){
 	this->id = "PlayerBotV2";
+	this->dim_input = 1;
+	this->dim_output = 1;
+	this->init_macro_params();
 }
 
 
 void PlayerBotV2::init_macro_params(){
-//	this->learning_rate = 0.01;
-//	this->bet_pot_percentage = 0.51;
-//	this->coefficient_reg = 0.51;
-
+	/* init macro parameters with default values*/
 	this->learning_rate = 0.001;
 	this->bet_pot_percentage = 0.51;
 	this->coefficient_reg = 0.1;
 }
 
 void PlayerBotV2::init_learning_params(){
-	this->dim_input = 1;
-	this->dim_output = 1;
-//	this->net = new Net(this->dim_input, this->dim_output);
+	cout<<"INIT NET"<<endl;
 	Net* net_ = new Net(this->dim_input, this->dim_output);
-	this->net = nn::Sequential(
+	this->river_net = nn::Sequential(
 			*net_
 	);
-	this->optimizer = new torch::optim::SGD(this->net->parameters(), this->learning_rate);
+	this->optimizer = new torch::optim::SGD(this->river_net->parameters(), this->learning_rate);
 }
 
 
@@ -67,7 +84,6 @@ void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, def
 	std::advance(it, rand_index);
 	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV2*>(*it)->get_learning_rate(), 0.1);
 	this->learning_rate = (float)distribution_lr(generator);
-
 	rand_index = rand() % winning_players.size();
 	it = winning_players.begin();
 	std::advance(it, rand_index);
@@ -75,21 +91,21 @@ void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, def
 	this->coefficient_reg = (float)distribution_lr(generator);
 }
 
-string PlayerBotV2::save_to_folder(string folder){
+string PlayerBotV2::save_to_folder(string folder)const{
 	string folder_to_save = ParentPlayerBotV2::save_to_folder(folder);
-	torch::save(this->net, folder_to_save + "/player_weights.q");
+	torch::save(this->river_net, folder_to_save + "/river_net_weights.q");
 	return folder_to_save;
 }
 
 string PlayerBotV2::load_from_folder(string folder){
 	string folder_to_load = ParentPlayerBotV2::load_from_folder(folder);
-	torch::load(this->net, folder_to_load + "/player_weights.q");
+	torch::load(this->river_net, folder_to_load + "/river_net_weights.q");
 	return folder_to_load;
 }
 
 
 void PlayerBotV2::zero_grad(){
-	this->net->zero_grad();
+	this->river_net->zero_grad();
 }
 
 void PlayerBotV2::init_hand(){
@@ -123,7 +139,7 @@ AbstractPlayer::Action PlayerBotV2::play_turn(){
 
 torch::Tensor PlayerBotV2::build_input(){
 	float board_value = this->table->get_board_average_value();
-	float hand_relative_value = this->hand.get_full_hand_average_value()/ board_value ;
+	float hand_relative_value = this->hand.get_full_hand_average_value() / board_value ;
 	float input[] = {hand_relative_value};//, (float)(this->table->count_in_hand())/6.};
 	auto input_var = torch::from_blob(input, {1, this->dim_input}).clone();
 	return input_var;
@@ -132,18 +148,13 @@ torch::Tensor PlayerBotV2::build_input(){
 AbstractPlayer::Action PlayerBotV2::play_river(){
 	this->loss = 0;
 	torch::Tensor input_var = this->build_input();
-//	cout<<"Player "<<this->pos_on_table<<endl;
-	this->output = this->net->forward(input_var);
-//	return this->check_pot();
+	this->output = this->river_net->forward(input_var);
 	return this->compute_rewards_and_select_action(this->output);
 }
 
 void PlayerBotV2::train(){
 //	cout<<"Player "<<this->pos_on_table<<endl;
 	Tensor error;
-//	cout<<this->learning_rate<<endl;
-//	cout<<this->coefficient_reg<<endl;
-//	cout<<this->output<<endl;
 	if (this->loss != 0){
 		cout<<"LOSS "<<this->loss<<endl;
 		float lo[] = {(float)this->loss};
