@@ -18,6 +18,7 @@ using namespace std;
 class AbstractTable;
 
 
+
 class AbstractPlayer{
 public:
 	AbstractPlayer(void);
@@ -34,14 +35,17 @@ public:
 
 	void init_bank_roll();
 	void set_hand(const Hand &);
-	void set_hand(const list<Card> &);
+	void set_hand(list<Card> *);
 	void clear_hand(void);
 	void add_card_to_hand(Card);
+	void add_cards_to_hand(list<Card>&);
 	void set_commitment(int);
 	void set_pos_on_table(unsigned int);
 	void set_stake(unsigned int);
 	void set_table(AbstractTable *, unsigned int );
 	void set_is_in_hand(bool);
+	void set_open_hand(bool);
+	void set_auto_rebuy(bool);
 
 	unsigned int get_hand_value();
 
@@ -53,12 +57,15 @@ public:
 	Hand get_hand() const;
 	unsigned int get_stake() const;
 	StatPlayer get_stats() const;
-	bool is_in_hand() const;
 	unsigned int get_pos_on_table()const;
 	unsigned int get_bank_roll()const;
 	string get_id()const;
-	unsigned int get_base_stake();
-	unsigned int get_initial_bank_roll();
+	unsigned int get_base_stake() const;
+	unsigned int get_initial_bank_roll()const ;
+	bool is_in_hand() const;
+	bool is_auto_rebuy() const ;
+	bool is_open_hand() const;
+	Hand::HandCategory get_hand_category();
 
 	string to_str();
 
@@ -91,13 +98,11 @@ public:
 	virtual void transfert_out(boost::archive::binary_oarchive &oa) const;
 	virtual string save_to_folder(string) const;
 	virtual string load_from_folder(string);
+	virtual string load_from_model(string);
 
 	friend class boost::serialization::access;
 	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version){
-		ar & stake;
-		ar & bank_roll;
-	}
+	void serialize(Archive & ar, const unsigned int version);
 
 protected:
 	unsigned int stake;
@@ -146,9 +151,9 @@ protected:
 	 * Maybe it can be removed because the table already has the information
 	 */
 
-	unsigned int bank_roll;
+	unsigned int stock;
 	/*
-	 * Bankroll of the player over different games or re-buy.
+	 * Stock pile of the player over different games or re-buy.
 	 * It is important to represent the player bank roll evolution in a learning purpose
 	 */
 

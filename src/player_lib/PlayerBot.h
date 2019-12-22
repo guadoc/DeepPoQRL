@@ -10,7 +10,7 @@
 
 #include <random>
 
-//#define DEBUG 0
+#define DEBUG 0
 
 #if DEBUG > 0
 	#include "PlayerLogs.h"
@@ -28,6 +28,8 @@ public:
 	PlayerBot(AbstractTable * table);
 	PlayerBot(AbstractTable * table, unsigned int);
 	virtual ~PlayerBot();
+
+	virtual void display_learning_params();
 
 
 	void init_hand();
@@ -52,6 +54,13 @@ public:
 	virtual Action play_flop()=0;
 	virtual Action play_turn()=0;
 	virtual Action play_river()=0;
+
+
+	Action raise_pot(unsigned int);
+	Action call_pot();
+	Action bet_pot(unsigned int);
+	Action check_pot();
+	Action fold_pot();
 
 protected:
 	bool train_mode;

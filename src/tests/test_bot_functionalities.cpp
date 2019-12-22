@@ -5,14 +5,13 @@
 #include "../deck_lib/Deck.h"
 #include "../player_lib/PlayerBotV1.h"
 #include "../player_lib/PlayerBotV2.h"
-#include "../player_lib/PlayerBotV21.h"
+#include "../player_lib/bots/PlayerBotV21.h"
 #include "../player_lib/PlayerGUI.h"
 #include "../player_lib/PlayerLogs.h"
 #include "../train_lib/Session.h"
 #include "../table_lib/TableTrain.h"
 #include "../table_lib/TableGUI.h"
 #include "../utils/utils.h"
-
 #include "../train_lib/Evolution.h"
 
 #include <torch/torch.h>
@@ -32,7 +31,6 @@ public:
 		evolution.run_evolution();
 		return 0;
 	}
-
 
 	int test_train_individual(){
 		unsigned int n_player = 6;
@@ -62,42 +60,6 @@ public:
 	}
 
 
-	int test_heritage(){
-		AbstractPlayer *p1 = new AbstractPlayer();
-		p1->save_to_folder("./bot");
-		cout<<"other player"<<endl;
-		AbstractPlayer *p2 = new PlayerBotV2();
-//		((PlayerBotV2*)p2)->init_train_params();
-		((PlayerBotV2*)p2)->init_train_params();
-		p2->save_to_folder("./bot");
-		return 0;
-	}
-
-	int test_player_serialization(){
-//		AbstractPlayer player = AbstractPlayer();
-//		player.add_to_stake(333);
-//		cout<<player.get_stake()<<endl;
-//		player.save_to_folder("./");
-//
-//		AbstractPlayer new_player = AbstractPlayer();
-//		new_player.load_from_file("./AbstractPlayer");
-//		cout<<new_player.get_stake()<<endl;
-
-		PlayerBotV1 player = PlayerBotV1();
-		player.add_to_stake(333);
-		player.set_learning_rate(77);
-		cout<<player.get_stake()<<endl;
-		cout<<player.get_learning_rate()<<endl;
-		player.save_to_folder(".");
-
-		PlayerBotV1 new_player = PlayerBotV1();
-		new_player.load_from_folder("./PlayerBotV1");
-		cout<<new_player.get_stake()<<endl;
-		cout<<new_player.get_learning_rate()<<endl;
-
-		return 0;
-	}
-
 	int test_torch(){
 		float param[] = {1.};
 		float input[] = {0.5};
@@ -123,57 +85,6 @@ public:
 		auto val2 = torch::sigmoid(tensor_param + tensor_input);
 //		val2.backward(torch::nullopt, /*keep_graph=*/ true, /*create_graph=*/ false);
 		cout<<"Grad 3 "<<tensor_param.grad()<<endl;
-		return 0;
-	}
-
-
-	int test_graphic_table(){
-		unsigned int n_player = 6;
-		vector<AbstractPlayer*> players;
-		for (unsigned int position=0; position < n_player; position++){
-			AbstractPlayer * p = new PlayerRandom();
-			players.push_back(p);
-		}
-		AbstractTable* table = new TableGUI(players);
-		table->display_table(0);
-		table->distribute_card_to_board();
-		table->display_table(0);
-		return 0;
-
-	}
-
-
-	int test_gui_player(){
-		unsigned int n_player = 6;
-		vector<AbstractPlayer*> players;
-		for (unsigned int position=0; position < n_player; position++){
-			AbstractPlayer * p = new PlayerGUI();
-			players.push_back(p);
-		}
-		TableGUI* table = new TableGUI(players);
-		unsigned int n_hands = 1000;
-		for (unsigned int i =1; i<= n_hands; i++){
-			table->play_hand();
-		}
-		return 0;
-	}
-
-
-	int test_random_player(){
-		unsigned int n_player = 6;
-		vector<AbstractPlayer*> players;
-		cout<<"Players init"<<endl;
-		for (unsigned int position=0; position < n_player; position++){
-			AbstractPlayer * p = new PlayerRandom(to_string(position));
-			players.push_back(p);
-		}
-		cout<<"Players ok"<<endl;
-		TableGUI* table = new TableGUI(players);
-		cout<<"Go play"<<endl;
-		unsigned int n_hands = 10;
-		for (unsigned int i =1; i<= n_hands; i++){
-			table->play_hand();
-		}
 		return 0;
 	}
 
@@ -347,21 +258,6 @@ public:
 
 
 
-	int test_save_and_load_player(){
-		string filename = "input.txt";
-		AbstractPlayer player = AbstractPlayer();
-		cout<<player.get_stake()<<endl;
-		player.add_to_stake(777);
-		cout<<player.get_stake()<<endl;
-		player.save_to_folder(filename);
-		AbstractPlayer new_player;
-//		PlayerBotV1 new_player;
-		new_player.load_from_folder(filename);
-		cout<<"new player"<<endl;
-		cout<<new_player.get_stake()<<endl;
-		return 0;
-	}
-
 	int test_save_and_load_playerV2(){
 		string folder = "./bot";
 		AbstractPlayer* player = new PlayerBotV2();
@@ -392,25 +288,6 @@ public:
 		unsigned int min_value= 0;
 		unsigned int n_points_max = 1000;
 		utils::plot(list, max_value, min_value, n_points_max);
-		return 0;
-	}
-
-	int test_complete_average_value(){
-		unsigned int n_monte_carlo = 1000;
-		Deck deck = Deck();
-		list<Card> card_list;
-		card_list.push_back(deck.random_card());
-		card_list.push_back(deck.random_card());
-		card_list.push_back(deck.random_card());
-		card_list.push_back(deck.random_card());
-		card_list.push_back(deck.random_card());
-		Hand hand = Hand(card_list);
-		cout<<hand.to_str()<<endl;
-		float complete_averaged_value = hand.combinatorial_average_value(7);
-		cout<<"complete average "<<complete_averaged_value<<endl;
-		float mc_average_value = hand.monte_carlo_average_value(7, n_monte_carlo );
-		cout<<"monte carlo average "<<mc_average_value<<endl;
-		cout<<hand.to_str()<<endl;
 		return 0;
 	}
 

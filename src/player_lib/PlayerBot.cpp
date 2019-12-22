@@ -6,6 +6,7 @@
  */
 
 #include "PlayerBot.h"
+#include "../table_lib/TableTrain.h"
 
 
 PlayerBot::PlayerBot(void):ParentPlayerBot(){
@@ -41,6 +42,10 @@ PlayerBot::~PlayerBot() {
 	// TODO Auto-generated destructor stub
 }
 
+void PlayerBot::display_learning_params(){
+ cout<<this->to_str();
+}
+
 
 void PlayerBot::commit_chips(unsigned int value){
 	ParentPlayerBot::commit_chips(value);
@@ -68,11 +73,11 @@ void PlayerBot::init_train_params(std::default_random_engine& generator){
 
 
 void PlayerBot::close_hand(){
-	ParentPlayerBot::close_hand();
 	if (this->train_mode){
 		this->train();
 		this->update_stats();
 	}
+	ParentPlayerBot::close_hand();
 }
 
 void PlayerBot::init_hand(){
@@ -80,9 +85,30 @@ void PlayerBot::init_hand(){
 	this->loss = 0;
 }
 
+PlayerBot::Action PlayerBot::raise_pot(unsigned int value){
+	((TableTrain*)this->table)->update_state(PlayerBot::t_raise, value);
+	return ParentPlayerBot::raise_pot(value);
+}
+PlayerBot::Action PlayerBot::call_pot(){
+	((TableTrain*)this->table)->update_state(PlayerBot::t_call, 0);
+	return ParentPlayerBot::call_pot();
+}
+PlayerBot::Action PlayerBot::bet_pot(unsigned int value){
+	((TableTrain*)this->table)->update_state(PlayerBot::t_bet, value);
+	return ParentPlayerBot::bet_pot(value);
+}
+PlayerBot::Action PlayerBot::check_pot(){
+	((TableTrain*)this->table)->update_state(PlayerBot::t_check, 0);
+	return ParentPlayerBot::check_pot();
+}
+PlayerBot::Action PlayerBot::fold_pot(){
+	((TableTrain*)this->table)->update_state(PlayerBot::t_fold, 0);
+	return ParentPlayerBot::fold_pot();
+}
+
 
 void PlayerBot::update_stats(){
-	this->player_stats.update_stats(this->bank_roll, this->stake, this->param_stat);
+	this->player_stats.update_stats(this->get_bank_roll(), this->get_stake(), this->param_stat);
 }
 
 

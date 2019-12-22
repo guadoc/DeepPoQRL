@@ -42,14 +42,18 @@ PlayerBotV2::PlayerBotV2(AbstractTable * table, unsigned int position):ParentPla
 	this->dim_output = 1;
 	this->init_macro_params();
 }
-
-
-void PlayerBotV2::init_macro_params(){
-	/* init macro parameters with default values*/
-	this->learning_rate = 0.001;
-	this->bet_pot_percentage = 0.51;
-	this->coefficient_reg = 0.1;
+void PlayerBotV2::display_learning_params(){
+	ParentPlayerBotV2::display_learning_params();
+	string str = "";
+	str += "LR[" + to_string(this->learning_rate) +"]";
+	str += ", Reg[" + to_string(this->coefficient_reg) +"]";
+	str += ", Agg[" + to_string(this->bet_pot_percentage) +"]";
+	cout<<str<<endl;
+	for (const auto& pair : this->river_net->named_parameters()) {
+	  std::cout << pair.key() << ": " << pair.value()<<endl;
+	}
 }
+
 
 void PlayerBotV2::init_learning_params(){
 	cout<<"INIT NET"<<endl;
@@ -60,9 +64,16 @@ void PlayerBotV2::init_learning_params(){
 	this->optimizer = new torch::optim::SGD(this->river_net->parameters(), this->learning_rate);
 }
 
+void PlayerBotV2::init_macro_params(){
+	/* init macro parameters with default values*/
+	this->learning_rate = 0.001;
+	this->bet_pot_percentage = 0.51;
+	this->coefficient_reg = 0.1;
+}
+
 
 void PlayerBotV2::init_macro_params(default_random_engine& generator){
-	std::normal_distribution<double> distribution_lr(0.1,0.1);
+	std::normal_distribution<double> distribution_lr(0.001,0.1);
 	this->learning_rate = (float)distribution_lr(generator);
 	std::normal_distribution<double> distribution_reg(0.1,0.1);
 	this->coefficient_reg = (float)distribution_reg(generator);
@@ -75,6 +86,7 @@ void PlayerBotV2::mute_macro_params(){
 }
 
 void PlayerBotV2::mute_macro_params(default_random_engine& generator){
+	//TODO
 	this->init_macro_params(generator);
 }
 
@@ -82,13 +94,14 @@ void PlayerBotV2::mute_macro_params(list<AbstractPlayer*> & winning_players, def
 	int rand_index = rand() % winning_players.size();
 	auto it = winning_players.begin();
 	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV2*>(*it)->get_learning_rate(), 0.1);
+	std::normal_distribution<double> distribution_lr(static_cast<PlayerBotV2*>(*it)->get_learning_rate(), 0.05);
 	this->learning_rate = (float)distribution_lr(generator);
+
 	rand_index = rand() % winning_players.size();
 	it = winning_players.begin();
 	std::advance(it, rand_index);
-	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV2*>(*it)->get_coefficient_reg(), 0.1);
-	this->coefficient_reg = (float)distribution_lr(generator);
+	std::normal_distribution<double> distribution_reg(static_cast<PlayerBotV2*>(*it)->get_coefficient_reg(), 0.05);
+	this->coefficient_reg = (float)distribution_reg(generator);
 }
 
 string PlayerBotV2::save_to_folder(string folder)const{
@@ -99,6 +112,12 @@ string PlayerBotV2::save_to_folder(string folder)const{
 
 string PlayerBotV2::load_from_folder(string folder){
 	string folder_to_load = ParentPlayerBotV2::load_from_folder(folder);
+	torch::load(this->river_net, folder_to_load + "/river_net_weights.q");
+	return folder_to_load;
+}
+
+string PlayerBotV2::load_from_model(string folder){
+	string folder_to_load = ParentPlayerBotV2::load_from_model(folder);
 	torch::load(this->river_net, folder_to_load + "/river_net_weights.q");
 	return folder_to_load;
 }
@@ -139,7 +158,7 @@ AbstractPlayer::Action PlayerBotV2::play_turn(){
 
 torch::Tensor PlayerBotV2::build_input(){
 	float board_value = this->table->get_board_average_value();
-	float hand_relative_value = this->hand.get_full_hand_average_value() / board_value ;
+	float hand_relative_value = this->hand.get_average_value() / board_value ;
 	float input[] = {hand_relative_value};//, (float)(this->table->count_in_hand())/6.};
 	auto input_var = torch::from_blob(input, {1, this->dim_input}).clone();
 	return input_var;
@@ -153,7 +172,7 @@ AbstractPlayer::Action PlayerBotV2::play_river(){
 }
 
 void PlayerBotV2::train(){
-//	cout<<"Player "<<this->pos_on_table<<endl;
+	cout<<"Player "<<this->pos_on_table<<endl;
 	Tensor error;
 	if (this->loss != 0){
 		cout<<"LOSS "<<this->loss<<endl;
@@ -170,10 +189,7 @@ void PlayerBotV2::train(){
 	}
 	error.backward();
 	this->optimizer->step();
-//	cout<<"AFTER "<<endl;
-//	for (const auto& pair : this->net->named_parameters()) {
-//	  std::cout << pair.key() << ": " << pair.value() << endl;
-//	}
+	this->display_learning_params();
 }
 
 AbstractPlayer::Action PlayerBotV2::compute_rewards_and_select_action(Tensor & output_distrib){

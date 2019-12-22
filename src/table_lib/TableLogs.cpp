@@ -11,16 +11,17 @@
 
 
 TableLogs::TableLogs(): ParentTableLogs(){
+	this->showdown_time_lapse = 0;
 
 }
 
 
 TableLogs::TableLogs(unsigned int n_players):ParentTableLogs(n_players){
-
+	this->showdown_time_lapse = 0;
 }
 
 TableLogs::TableLogs(vector<AbstractPlayer*> & players):ParentTableLogs(players){
-
+	this->showdown_time_lapse = 0;
 }
 
 TableLogs::~TableLogs(){
@@ -37,12 +38,6 @@ void TableLogs::distribute_street(Street street){
 	this->display_table(-1);
 }
 
-bool TableLogs::run_full_pre_flop(void){
-	cout<<"***********************************PRE FLOP*************************"<<endl;
-	return ParentTableLogs::run_full_pre_flop();
-}
-
-
 void TableLogs::play_hand(){
 	cout<<"###########################################################################################"<<endl;
 	cout<<"###########################################################################################"<<endl;
@@ -50,12 +45,10 @@ void TableLogs::play_hand(){
 	ParentTableLogs::play_hand();
 }
 
-
 void TableLogs::distribute_pot_to_best_hands(){
 	cout<<"Pot to best hand"<<endl;
 	ParentTableLogs::distribute_pot_to_best_hands();
 }
-
 
 void TableLogs::distribute_side_pots_to_best_hands(){
 	cout<<"Side pots to best hands"<<endl;
@@ -67,7 +60,6 @@ void TableLogs::init_hand(){
 	this->display_table(-1);
 }
 
-
 void TableLogs::close_hand(){
 	ParentTableLogs::close_hand();
 	this->display_table(-1);
@@ -78,6 +70,10 @@ void TableLogs::player_gets_pot(AbstractPlayer* player, unsigned int pot){
 	cout<<"Sit "<<player->get_pos_on_table()<<" gets "<<pot<<endl;
 }
 
+bool TableLogs::run_full_pre_flop(void){
+	cout<<"***********************************PRE FLOP*************************"<<endl;
+	return ParentTableLogs::run_full_pre_flop();
+}
 
 bool TableLogs::run_full_street(Street street, bool action){
 	if(street == AbstractTable::t_flop){
@@ -92,6 +88,11 @@ bool TableLogs::run_full_street(Street street, bool action){
 	return ParentTableLogs::run_full_street(street, action);
 }
 
+void TableLogs::showdown(bool continue_action){
+	this->display_table(-2);
+	sleep(this->showdown_time_lapse);
+	ParentTableLogs::showdown(continue_action);
+}
 
 
 

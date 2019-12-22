@@ -2,7 +2,7 @@
  * GUI.cpp
  *
  *  Created on: May 12, 2019
- *      Author: walnutalgo
+ *      Author: Michael Blot
  */
 
 #include "GUI.h"
@@ -75,11 +75,11 @@ void GUI::display_text(string text, TTF_Font* font, SDL_Color color, unsigned in
 	}
 }
 
-void GUI::display_card_list(list<Card> card_list, unsigned int up_to_n, unsigned int coordX, unsigned int coordY, unsigned int sizeX , unsigned int sizeY) {
+void GUI::display_card_list(list<Card> card_list, unsigned int up_to_n, unsigned int coordX, unsigned int coordY, unsigned int sizeX , unsigned int sizeY, bool cards_open) {
 	if(card_list.size() > 0){
 		unsigned int i =0;
 		for(Card const card : card_list){
-			this->display_card(card, coordX +i*sizeX+5 , coordY, sizeX, sizeY);
+			this->display_card(card, coordX +i*sizeX+5 , coordY, sizeX, sizeY, cards_open);
 			i++;
 			if (i >= up_to_n){
 				break;
@@ -88,8 +88,13 @@ void GUI::display_card_list(list<Card> card_list, unsigned int up_to_n, unsigned
 	}
 }
 
-void GUI::display_card(Card card, unsigned int coordX, unsigned int coordY, unsigned int sizeX, unsigned int sizeY) {
-	this->display_image(this->get_card_file_name(card), coordX, coordY, sizeX, sizeY);
+void GUI::display_card(Card card, unsigned int coordX, unsigned int coordY, unsigned int sizeX, unsigned int sizeY, bool card_open) {
+	if(card_open){
+		this->display_image(this->get_card_file_name(card), coordX, coordY, sizeX, sizeY);
+	}
+	else{
+		this->display_image(GRAPHIC_TOOL_FOLDER + CARD_FOLDER + "muteCard.png", coordX, coordY, sizeX, sizeY);
+	}
 }
 
 string GUI::get_card_file_name(Card card){
@@ -109,7 +114,7 @@ void GUI::display_table(unsigned int pot, list<Card> board, vector<AbstractPlaye
 	SDL_WaitEvent(&event);
 	// display all player on the sits in sits_coords
 	for (unsigned int pos = 0; pos < players.size(); pos++){
-		this->display_player(players[pos], this->players_coord[pos], active_player == pos, (dealer_pos == pos));
+		this->display_player(players[pos], this->players_coord[pos], active_player == pos, (dealer_pos == pos), (active_player== -2));
 	}
 	// display the pot value
 	this->display_text("Pot: "+ to_string(pot),
@@ -125,11 +130,12 @@ void GUI::display_table(unsigned int pot, list<Card> board, vector<AbstractPlaye
 						BOARD_COORD_X,
 						BOARD_COORD_Y,
 						CARD_SIZE_X,
-						CARD_SIZE_Y);
+						CARD_SIZE_Y,
+						true);
 	SDL_RenderPresent(this->renderer);
 }
 
-void GUI::display_player(AbstractPlayer * player, unsigned int * coords, bool is_active, bool is_dealer){
+void GUI::display_player(AbstractPlayer * player, unsigned int * coords, bool is_active, bool is_dealer, bool force_display_cards){
 	unsigned int coordX = coords[0];
 	unsigned int coordY = coords[1];
 	string file_name;
@@ -146,15 +152,15 @@ void GUI::display_player(AbstractPlayer * player, unsigned int * coords, bool is
 	this->display_text(player->get_id(),
 						TTF_OpenFont((GRAPHIC_TOOL_FOLDER + STAKE_FONT).c_str(),32),
 						STAKE_COLOR,
-						coordX+20,
-						coordY + 20,
+						coordX + 28,
+						coordY + 30,
 						NAME_SIZE_X,
 						NAME_SIZE_Y);
 	this->display_text(to_string(player->get_stake()),
 						TTF_OpenFont((GRAPHIC_TOOL_FOLDER + STAKE_FONT).c_str(),32),
 						STAKE_COLOR,
-						coordX+30,
-						coordY + 50,
+						coordX + 42,
+						coordY + NAME_SIZE_Y + 3,
 						STAKE_SIZE_X,
 						STAKE_SIZE_Y);
 
@@ -166,12 +172,13 @@ void GUI::display_player(AbstractPlayer * player, unsigned int * coords, bool is
 			if(i == 1){break;}
 			i++;
 		}
-		this->display_card_list(player->get_hand().get_cards(),
+		this->display_card_list(player_hand,//player->get_hand().get_cards(),
 								2,
-								coordX + 30,
-								coordY - 30,
+								coordX + 60,
+								coordY - 50,
 								CARD_SIZE_X,
-								CARD_SIZE_Y);
+								CARD_SIZE_Y,
+								player->is_open_hand() or force_display_cards);
 		if(player->get_commitment() > 0){
 			//TODO adapt font, size, color,....
 			unsigned int coordX_invested_chips = coords[2];
@@ -205,7 +212,7 @@ SDL_Rect GUI::display_button(string text, TTF_Font* font, SDL_Color text_color, 
 	if (surfaceMessage){
 		SDL_Texture* Message = SDL_CreateTextureFromSurface(this->renderer, surfaceMessage);
 		if (Message){
-			SDL_SetRenderDrawColor(this->renderer, 255, 0, 255, 255 );
+			SDL_SetRenderDrawColor(this->renderer, 255, 120, 120, 130);
 			SDL_RenderFillRect(this->renderer, &button_rect);
 			SDL_RenderCopy(this->renderer, Message, NULL, &text_rect);
 			SDL_SetRenderDrawColor(this->renderer, 0, 0, 0, 0);

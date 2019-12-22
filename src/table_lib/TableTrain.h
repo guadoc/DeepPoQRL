@@ -8,6 +8,8 @@
 #ifndef TABLE_LIB_TABLETRAIN_H_
 #define TABLE_LIB_TABLETRAIN_H_
 
+#include "../player_lib/PlayerBot.h"
+
 
 using namespace std;
 
@@ -21,6 +23,7 @@ using namespace std;
 	using ParentTableTrain = AbstractTable;//TableLogs;
 #endif
 
+
 class TableTrain: public ParentTableTrain {
 public:
 	TableTrain(void);
@@ -28,10 +31,16 @@ public:
 	TableTrain(vector<AbstractPlayer*> &);
 	virtual ~TableTrain();
 
-
+	struct TableState{
+			int interest;
+			int initiative;
+	};
+	TableState get_state();
+	void init_state();
+	void init_hand();
+	void update_state(PlayerBot::Action, unsigned int);
 protected:
-//	State state;
-//	Tracker tracker;
+	TableState table_state;
 };
 
 

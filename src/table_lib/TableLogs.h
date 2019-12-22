@@ -29,12 +29,15 @@ public:
 	void play_hand();
 	bool run_full_pre_flop();
 	bool run_full_street(Street street, bool action);
+	void showdown(bool);
 
 	void player_gets_pot(AbstractPlayer* player, unsigned int pot);
 	void distribute_pot_to_best_hands();
 	void distribute_side_pots_to_best_hands();
 
 	void close_hand();
+protected:
+	unsigned int showdown_time_lapse;
 };
 
 #endif /* TABLE_LIB_TABLELOGS_H_ */

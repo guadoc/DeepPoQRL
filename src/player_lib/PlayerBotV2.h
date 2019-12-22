@@ -24,6 +24,8 @@ public:
 	float get_learning_rate(){return this->learning_rate;}
 	float get_bet_pot_percentage(){return this->bet_pot_percentage;}
 
+	void display_learning_params();
+
 //	void init_train_params();
 	void train();
 
@@ -53,6 +55,18 @@ public:
 
 	string save_to_folder(string) const;
 	string load_from_folder(string) ;
+	string load_from_model(string) override;
+
+	void transfert_in(boost::archive::binary_iarchive & iarch) override{iarch >> *this;}
+	void transfert_out(boost::archive::binary_oarchive &oa) const override{oa <<*this;}
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version) {
+		ar & boost::serialization::base_object<AbstractPlayer>(*this);
+		ar & learning_rate;
+		ar & bet_pot_percentage;
+		ar & coefficient_reg;
+	}
 
 
 protected:

@@ -128,7 +128,7 @@ float sigmoid(float x){
 
 AbstractPlayer::Action PlayerBotV1::play_river(){
 	float board_value = this->table->get_board_average_value();
-	float hand_relative_value = this->hand.get_full_hand_average_value()/ board_value ;
+	float hand_relative_value = this->hand.get_average_value()/ board_value ;
 //	cout<<"Player "<<this->pos_on_table<<" has hand value: "<<this->hand_relative_value<<endl;
 	if (this->table->get_last_raise() != 0){// there is a bet from another player: raise_pot, call_pot or fold_pot
 		this->lead = false;

@@ -6,11 +6,11 @@
 
 
 AbstractPlayer::Action PlayerGUI::play_preflop(){
-	int coordX = 650;
-	int coordY = 635;
-	int sizeX = 150;
-	int sizeY = 100;
-	int margin_value = 40;
+	int coordX = 970;
+	int coordY = 900;
+	int sizeX = 200;
+	int sizeY = 130;
+	int margin_value = 60;
 	string amount_str = " ";
 	GUI *gui = (dynamic_cast<TableGUI*>(this->table))->get_gui();
 	if (this->table->get_last_raise() != 0 and this->table->get_last_raise() != this->commitment){
@@ -46,6 +46,7 @@ AbstractPlayer::Action PlayerGUI::play_preflop(){
 						int x;
 						int y;
 						SDL_GetMouseState(&x, &y);
+						cout<<x<<", "<<y<<endl;
 						if (gui->check_click_in_rect(x, y, raise_button_rect)){
 							unsigned int value_raise = atof(amount_str.c_str());
 							return this->raise_pot(value_raise);
@@ -96,13 +97,13 @@ AbstractPlayer::Action PlayerGUI::play_preflop(){
 																(int) (1.5* (float)sizeX),
 																sizeY);
 		SDL_Rect bet_button_rect = gui->display_action_button("BET",
-																	coordX + (int) (1.5* (float)sizeX),
-																	coordY,
-																	sizeX,
-																	sizeY);
+																coordX + (int) (1.5* (float)sizeX),
+																coordY,
+																sizeX,
+																sizeY);
 		gui->display_action_button(amount_str,
 									coordX + (int) (1.5* (float)sizeX),
-									coordY -margin_value,
+									coordY - margin_value,
 									sizeX,
 									margin_value);
 		bool no_action = true;

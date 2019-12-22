@@ -21,7 +21,7 @@ Evolution::Evolution() {
 	this->generator = std::default_random_engine();
 	for (unsigned int position=0; position < this->n_players; position++){
 		AbstractPlayer * p = new PlayerBotV2(to_string(position));
-//		((PlayerBot*)p)->init_macro_params(generator);
+		((PlayerBot*)p)->init_macro_params(this->generator);
 //		((PlayerBot*)p)->set_train_mode(true);
 		this->candidates.push_back(p);
 	}
@@ -65,14 +65,18 @@ list<AbstractPlayer*> Evolution::select_survivors(vector<AbstractPlayer *> & pla
 }
 
 bool Evolution::survived(AbstractPlayer *player){
-	return (player->get_bank_roll() + player->get_stake()) > (player->get_initial_bank_roll());
+	return player->get_bank_roll()  > player->get_initial_bank_roll();
 }
 
 void Evolution::run_selection(){
+	this->run_selection(this->n_hand_selection);
+}
+
+void Evolution::run_selection(unsigned int n_hand){
 	for (auto &p: this->candidates){
 		p->init_bank_roll();
 	}
-	for (unsigned int i =1; i<= this->n_hand_selection; i++){
+	for (unsigned int i =1; i<= n_hand; i++){
 		utils::progress_bar((float)i/(float)this->n_hand_selection);
 		this->table->play_hand();
 	}
@@ -108,7 +112,7 @@ void Evolution::run_mutations(){
 	}
 }
 
-void Evolution::init_players_macro_params(){
+void Evolution::init_players_params_for_evolution(){
 	for(auto & p: this->candidates){
 		((PlayerBot*)p)->init_train_params(this->generator);
 		((PlayerBot*)p)->set_train_mode(true);
@@ -116,7 +120,7 @@ void Evolution::init_players_macro_params(){
 }
 
 void Evolution::run_evolution(string generation_folder){
-	this->init_players_macro_params();
+	this->init_players_params_for_evolution();
 	for(unsigned int j= 1; j<= this->n_generation; j++){
 		this->run_selection();
 		cout<<this->table->to_str()<<endl;
@@ -128,10 +132,6 @@ void Evolution::run_evolution(string generation_folder){
 void Evolution::run_evolution(){
 	this->run_evolution(this->saving_folder);
 }
-
-
-
-
 
 
 } /* namespace std */

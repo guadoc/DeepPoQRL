@@ -20,11 +20,12 @@ public:
 	Evolution(vector<AbstractPlayer*>& players, unsigned int n_generation, unsigned int n_hand_selection);
 	virtual ~Evolution();
 
-	void init_players_macro_params();
+	void init_players_params_for_evolution();
 
 	list<AbstractPlayer*> select_survivors(vector<AbstractPlayer *> &);
 	bool survived(AbstractPlayer *);
 	void run_selection();
+	void run_selection(unsigned int);
 	void run_mutations();
 	string save_best_genome();
 	string save_best_genome(string folder);

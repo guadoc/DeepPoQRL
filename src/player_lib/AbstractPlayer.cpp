@@ -5,26 +5,25 @@
 #include "../utils/utils.h"
 
 #include <sys/stat.h>
-
+#include <boost/filesystem.hpp>
 
 #define BASE_STAKE 100
-#define BANK_ROLL 100000
+#define BANK_ROLL_INIT 100000
 
 using namespace std;
 
 AbstractPlayer::AbstractPlayer(void){
-	this->initial_bank_roll = BANK_ROLL;
+	this->initial_bank_roll = BANK_ROLL_INIT;
 	this->base_stake = BASE_STAKE;
+	this->id = "AbstractPlayer";
 	this->init_bank_roll();
 	this->hand = Hand();
 	this->commitment = 0;
-	this->id = "AbstractPlayer";
 	this->table = NULL;
 	this->pos_on_table = 0;
 	this->_is_in_hand = true;
-	this->open_hand = false;
+	this->open_hand = true;
 	this->auto_rebuy = true;
-
 }
 
 AbstractPlayer::AbstractPlayer(string id):AbstractPlayer(){
@@ -41,61 +40,32 @@ AbstractPlayer::AbstractPlayer(AbstractTable *table, unsigned int position):Abst
 }
 
 void AbstractPlayer::init_bank_roll(){
-	this->bank_roll = this->initial_bank_roll - this->base_stake;
-	this->stake  = this->base_stake;
+	this->stock = BANK_ROLL_INIT - BASE_STAKE;
+	this->stake  = BASE_STAKE;
 }
 
 bool AbstractPlayer::operator>=(const AbstractPlayer &player){
-	return (this->bank_roll + this->stake) >= (player.get_bank_roll() + player.get_stake());
+	return (this->get_bank_roll()) >= (player.get_bank_roll());
 }
 
 bool AbstractPlayer::operator>(const AbstractPlayer &player){
-	return (this->bank_roll + this->stake) > (player.get_bank_roll() + player.get_stake());
+	return (this->get_bank_roll()) > (player.get_bank_roll());
 }
 
 bool AbstractPlayer::operator==(const AbstractPlayer &player){
-	return (this->bank_roll + this->stake) == (player.get_bank_roll() + player.get_stake());
+	return (this->get_bank_roll()) == (player.get_bank_roll());
 }
 
 bool AbstractPlayer::operator<=(const AbstractPlayer &player){
-	return (this->bank_roll + this->stake) <= (player.get_bank_roll() + player.get_stake());
+	return (this->get_bank_roll()) <= (player.get_bank_roll());
 }
 
 bool AbstractPlayer::operator<(const AbstractPlayer &player){
-	return (this->bank_roll + this->stake) < (player.get_bank_roll() + player.get_stake());
+	return (this->get_bank_roll()) < (player.get_bank_roll());
 }
 
-unsigned int AbstractPlayer::get_initial_bank_roll(){
+unsigned int AbstractPlayer::get_initial_bank_roll() const{
 	return this->initial_bank_roll;
-}
-
-
-string AbstractPlayer::save_to_folder(string foldername) const {
-	cout<<"Saving "<<this->id<<" in "<<foldername<<endl;
-	cout<<"Abstract"<<endl;
-	string folder_to_save = foldername + "/" + this->id;
-	const int dir_err = mkdir(folder_to_save.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	string filename = folder_to_save + "/setup.p";
-	std::ofstream ofs(filename);
-	boost::archive::binary_oarchive oa(ofs);
-	this->transfert_out(oa);
-	cout<<"Player saved in folder "<<folder_to_save<<endl;
-	return folder_to_save;
-}
-void AbstractPlayer::transfert_out(boost::archive::binary_oarchive &oa) const{
-	oa << *this;
-}
-
-string AbstractPlayer::load_from_folder(string foldername){
-	cout<<"Loading "<<this->id<<" from "<<foldername<<endl;
-	string folder_to_load = foldername + "/" + this->id;
-	ifstream ifs(folder_to_load + "/setup.p");
-	boost::archive::binary_iarchive iarch(ifs);
-	this->transfert_in(iarch);
-	return folder_to_load;
-}
-void AbstractPlayer::transfert_in(boost::archive::binary_iarchive & iarch){
-	iarch >> *this;
 }
 
 unsigned int AbstractPlayer::get_stake() const {
@@ -106,12 +76,16 @@ StatPlayer AbstractPlayer::get_stats() const {
 	return this->player_stats;
 }
 
-unsigned int AbstractPlayer::get_base_stake(){
+unsigned int AbstractPlayer::get_base_stake() const{
 	return this->base_stake;
 }
 
 bool AbstractPlayer::is_in_hand() const{
 	return this->_is_in_hand;
+}
+
+bool AbstractPlayer::is_open_hand() const{
+	return this->open_hand;
 }
 
 unsigned int AbstractPlayer::get_pos_on_table()const{
@@ -126,7 +100,7 @@ void AbstractPlayer::set_stake(unsigned int stake){
 	this->stake = stake;
 }
 
-void AbstractPlayer::set_hand(const list<Card>& hand){
+void AbstractPlayer::set_hand(list<Card>* hand){
 	this->hand = Hand(hand);
 }
 
@@ -134,9 +108,17 @@ void AbstractPlayer::set_hand(const Hand& hand){
 	this->hand = hand;
 }
 
+void AbstractPlayer::set_auto_rebuy(bool rebuy){
+	this->auto_rebuy = rebuy;
+}
+
 void AbstractPlayer::set_table(AbstractTable * table, unsigned int position){
-	this->table =table;
+	this->table = table;
 	this->pos_on_table = position;
+}
+
+void AbstractPlayer::set_open_hand(bool open_hand){
+	this->open_hand = open_hand;
 }
 
 void AbstractPlayer::clear_hand(void){
@@ -147,51 +129,91 @@ void AbstractPlayer::add_card_to_hand(Card card){
 	this->hand.push_back(card);
 }
 
+void AbstractPlayer::add_cards_to_hand(list<Card> &cards){
+	this->hand.add_cards(cards);
+}
+
 unsigned int AbstractPlayer::get_hand_value(){
 	return this->hand.evaluate();
 }
 
-AbstractPlayer::~AbstractPlayer(void){
-
+Hand::HandCategory AbstractPlayer::get_hand_category(){
+	this->hand.scan();
+	cout<<this->hand.to_str()<<endl;
+	return this->hand.get_category_from_scanned_hand();
 }
 
-void AbstractPlayer::init_hand(){
-	this->commitment = 0;
-	this->_is_in_hand = true;
-	this->hand.clear();
-	if(this->auto_rebuy){//rebuy if autorebuy and if needed
-		int val = max((int)this->base_stake - (int)this->stake, 0);
-		this->stake += val;
-		this->bank_roll -= val;
-	}
-	else{
-		if(this->stake <= this->table->get_blend_value()){ //Rebuy only id stake < blend
-			unsigned int refill = min(this->base_stake, this->bank_roll);
-			this->stake = refill ;
-			this->bank_roll -= refill ;
-		}
-	}
+AbstractPlayer::~AbstractPlayer(void){
 }
 
 void AbstractPlayer::close_hand(){
-	// this->update_stats();
 }
 
+string AbstractPlayer::save_to_folder(string foldername) const {
+	cout<<"Saving "<<this->get_id()<<" in "<<foldername<<endl;
+	string folder_to_save = foldername + "/" + this->get_id();
+	boost::filesystem::create_directory(folder_to_save);
+	string filename = folder_to_save + "/setup.p";
+	std::ofstream ofs(filename);
+	boost::archive::binary_oarchive oa(ofs);
+	this->transfert_out(oa);
+	cout<<"Player saved in folder "<<folder_to_save<<endl;
+	return folder_to_save;
+}
 
+void AbstractPlayer::transfert_out(boost::archive::binary_oarchive &oa) const{
+	oa << *this;
+}
+
+void AbstractPlayer::transfert_in(boost::archive::binary_iarchive & iarch){
+	iarch >> *this;
+}
+
+template<class Archive>
+void AbstractPlayer::serialize(Archive & ar, const unsigned int version){
+	ar & this->id;
+}
+
+string AbstractPlayer::load_from_folder(string foldername){
+	cout<<"Loading "<<this->get_id()<<" from "<<foldername<<endl;
+	string folder_to_load = foldername + "/" + this->get_id();
+	return this->load_from_model(folder_to_load);
+}
+
+string AbstractPlayer::load_from_model(string model_folder){
+	if(boost::filesystem::exists(model_folder)){
+		cout<<"Loading "<<this->get_id()<<" from "<<model_folder<<endl;
+		string setup_filename = model_folder + "/setup.p";
+		if(boost::filesystem::exists(setup_filename)){
+			ifstream ifs(setup_filename);
+			boost::archive::binary_iarchive iarch(ifs);
+			this->transfert_in(iarch);
+		}
+		else{
+			throw std::invalid_argument("File "
+										+ setup_filename
+										+ " does not exist");
+		}
+		return model_folder;
+	}
+	else{
+		throw std::invalid_argument("Folder "
+									+ model_folder
+									+ " does not exist");
+	}
+}
 
 void AbstractPlayer::update_stats(){
-	this->player_stats.update_stats(this->bank_roll, this->stake);
+	this->player_stats.update_stats(this->stock, this->stake);
 }
 
-
 string AbstractPlayer::to_str(){
-	string str = "Sit " + to_string(this->pos_on_table);
-	str+= "(player " + this->id + ")";
-	str+=" [" + to_string(this->stake) + " + (" + to_string(this->commitment) + ") / " + to_string(this->bank_roll)+"] : ";
+	string str = "Sit " + to_string(this->get_pos_on_table());
+	str+= "(player " + this->get_id() + ")";
+	str+=" [" + to_string(this->get_stake()) + " + (" + to_string(this->get_commitment()) + ") / " + to_string(this->get_bank_roll())+"] : ";
 	str+= this->hand.to_str();
 	return str;
 }
-
 
 void AbstractPlayer::commit_chips(unsigned int value){
 	this->stake-=value;
@@ -211,11 +233,15 @@ Hand AbstractPlayer::get_hand() const {
 }
 
 unsigned int AbstractPlayer::get_bank_roll()const{
-	return this->bank_roll;
+	return this->stock + this->stake;
 }
 
 string AbstractPlayer::get_id()const{
 	return this->id;
+}
+
+bool AbstractPlayer::is_auto_rebuy() const{
+	return this->auto_rebuy;
 }
 
 
@@ -223,6 +249,23 @@ void AbstractPlayer::add_to_stake(unsigned int value) {
 	this->stake += value;
 }
 
+void AbstractPlayer::init_hand(){
+	this->commitment = 0;
+	this->_is_in_hand = true;
+	this->hand.clear();
+	if(this->auto_rebuy){//rebuy if autorebuy and if needed
+		int val = max((int)this->base_stake - (int)this->stake, 0);
+		this->stake += val;
+		this->stock -= val;
+	}
+	else{
+		if(this->stake <= this->table->get_blend_value()){ //Rebuy only id stake < blend
+			unsigned int refill = min(this->base_stake, this->stock);
+			this->stake = refill ;
+			this->stock -= refill ;
+		}
+	}
+}
 
 AbstractPlayer::Action AbstractPlayer::play_street(unsigned int street){
 	switch(street){
@@ -256,7 +299,7 @@ AbstractPlayer::Action AbstractPlayer::raise_pot(unsigned int value){
 										+ to_string(this->table->get_last_raise())
 										+ ", before was "
 										+ to_string(this->table->get_before_last_raise())
-										+ ", total raise is "
+										+ ", intended raise is "
 										+ to_string(value)
 										+ ", should be at least "
 										+ to_string(this->table->get_last_raise() + this->table->get_diff_last_raises())
@@ -269,14 +312,28 @@ AbstractPlayer::Action AbstractPlayer::raise_pot(unsigned int value){
 									+ " above stake "
 									+ to_string(this->stake));
 	}
+	else{
+		if (value  <= this->table->get_last_raise()){// the value of the raise is not standard
+			throw std::invalid_argument("Error: invalid raise value from player "
+										+ this->id
+										+ "\n"
+										+"Last raise/bet was "
+										+ to_string(this->table->get_last_raise())
+										+ ", before was "
+										+ to_string(this->table->get_before_last_raise())
+										+ ", total raise is "
+										+ to_string(value)
+										+ ", All in should just call "
+										);
+		}
+	}
 	this->commit_chips(value - this->commitment);
 	this->table->update_current_raises(value);
 	return AbstractPlayer::Action::t_raise;
 }
 
-
 AbstractPlayer::Action AbstractPlayer::bet_pot(unsigned int value){
-	if(this->table->get_last_raise() > this->commitment){
+	if(this->table->get_last_raise() != 0){//> this->commitment){
 		throw std::invalid_argument("Last raise was "
 									+ to_string(this->table->get_last_raise())
 									+"\n Bet from player "
@@ -286,13 +343,15 @@ AbstractPlayer::Action AbstractPlayer::bet_pot(unsigned int value){
 	if (value > this->stake + this->commitment){
 		throw std::invalid_argument("Error: bet "+ to_string(value) + " above stake " + to_string(this->stake));
 	}
+	if (value <= 0){
+		throw std::invalid_argument("Error: bet "+ to_string(value) + ", should be over 0");
+	}
 	this->commit_chips(value - this->commitment);
 	this->table->update_current_raises(value);
 	return AbstractPlayer::Action::t_bet;
 }
 
 AbstractPlayer::Action AbstractPlayer::fold_pot(){
-	//TODO, there is no check, whether or not the commited money is equivalent to the raise
 	if(this->table->get_last_raise() == this->commitment){
 		throw std::invalid_argument("Fold not accepted from player "
 									+ this->id
@@ -314,18 +373,15 @@ AbstractPlayer::Action AbstractPlayer::check_pot(){
 	return AbstractPlayer::Action::t_check;
 }
 
-
 AbstractPlayer::Action AbstractPlayer::call_pot(){
 	unsigned int value = (int)this->table->get_last_raise() - (int)this->commitment;
+	if(value == 0){
+		throw std::invalid_argument("Call not necessary, last raise was"
+									+ to_string(this->table->get_last_raise())
+									+ "\n, commitment is "
+									+ to_string(this->commitment));
+	}
 	unsigned int value_commited = min(value, this->stake);
 	this->commit_chips(value_commited);
 	return Action::t_call;
 }
-
-
-
-
-
-
-
-

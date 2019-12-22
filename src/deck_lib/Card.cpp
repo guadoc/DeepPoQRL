@@ -14,10 +14,10 @@ using namespace std;
 Card::Card(void):rank(Rank::_ERROR_RANK), suit(Suit::_ERROR_SUIT), id(0){}
 Card::Card(Rank rank, Suit suit){
 	if (rank > 13 || rank <= 0){
-		cout<<"RANK ERROR"<<endl;
+		throw std::invalid_argument("RANK ERROR: " + to_string(suit));
 	}
 	if (suit != Suit::_C && suit != Suit::_S && suit != Suit::_H && suit != Suit::_D  && suit != Suit::_ERROR_SUIT){
-		cout<<"SUIT ERROR"<<endl;
+		throw std::invalid_argument("SUIT ERROR: "+ to_string(suit));
 	}
 	this->suit = suit;
 	this->rank = rank;
@@ -31,20 +31,15 @@ Card::Card(const Card & C){
 }
 
 Card::Card(unsigned int card_id){
+	if (card_id > 51 || card_id < 0){
+		throw std::invalid_argument("Card id ERROR: "
+									+ to_string(card_id) +
+									", should be between 0 and 51");
+	}
 	int rank = card_id % 13;
 	this->suit = (Suit)((double)(card_id - rank) / 13 + 1);
 	this->rank = (Rank)(rank + 1);
 	this->id = card_id;
-}
-
-
-//TODO
-Card::Card(const string cards){
-	string suit_string;
-	string rank_string;
-	this->suit = Suit::_ERROR_SUIT;
-	this->rank = Rank::_ERROR_RANK;
-	this->id = 13 * (this->suit - 1) + this->rank - 1;
 }
 
 void Card::set_suit(Suit suit){
@@ -73,15 +68,15 @@ string Card::to_str() const {
 		break;
 			 }
 	case Suit::_S : {
-		suit="s";
+		suit = "s";
 		break;
 			 }
 	case Suit::_H : {
-		suit="h";
+		suit = "h";
 		break;
 			 }
 	case Suit::_C : {
-		suit="c";
+		suit = "c";
 		break;
 			 }
 	case Suit::_ERROR_SUIT : {
@@ -122,7 +117,7 @@ string Card::to_str() const {
 			rank = "9";
 			break;
 		 }
-		case Rank::_10 : {
+		case Rank::_T : {
 			rank = "T";
 			break;
 		 }
@@ -145,15 +140,10 @@ string Card::to_str() const {
 		case Rank::_ERROR_RANK : {
 			rank = " Card ERROR";
 			break;
-				}
+		 }
 		}
 	return rank + suit;
 }
-
-
-//void Card::display_card (SDL_Renderer * renderer, int coordX,  int coordY, int sizeX, int sizeY) const {
-//	util_graphic::display_image(util_graphic::get_card_filename(this->to_str()), renderer, coordX, coordY, sizeX, sizeY);
-//}
 
 bool Card::operator < (const Card &Ca)
 {
@@ -172,8 +162,7 @@ bool Card::operator < (const Card &Ca)
 	}
 }
 
-bool Card::operator <= (const Card &Ca)
-{
+bool Card::operator <= (const Card &Ca){
 	if (this->rank < Ca.rank){
 		return true;
 	}
@@ -205,6 +194,7 @@ bool Card::operator >= (const Card &Ca)
 		return false;
 	}
 }
+
 bool Card::operator > (const Card &Ca)
 {
 	if (this->rank > Ca.rank){
@@ -221,6 +211,7 @@ bool Card::operator > (const Card &Ca)
 		return false;
 	}
 }
+
 bool Card::operator == (const Card &Ca)
 {
 	if (this->id == Ca.id){//(this->rank == Ca.rank && this->suit == Ca.suit){

@@ -2,13 +2,13 @@
  * PlayerBotV21.h
  *
  *  Created on: Oct 6, 2019
- *      Author: walnutalgo
+ *      Author: Michael Blot
  */
 
 #ifndef PLAYER_LIB_PLAYERBOTV21_H_
 #define PLAYER_LIB_PLAYERBOTV21_H_
 
-#include "PlayerBotV2.h"
+#include "../PlayerBotV2.h"
 
 namespace std {
 
@@ -21,9 +21,11 @@ public:
 	~PlayerBotV2_1();
 
 //	void init_hand();
-	void zero_grad() override;
+//	void zero_grad() override;
 	void init_learning_params() override;
 	AbstractPlayer::Action play_river();
+
+	torch::Tensor build_input();
 
 protected:
 };

@@ -1,30 +1,35 @@
 #include "Hand.h"
 #include <cmath>
 
+#define ID_STRAIGHT 0
+#define ID_SINGLE 1
+#define ID_PAIR 2
+#define ID_TRIPPLE 3
+#define ID_SQUARE 4
+#define ID_FLUSH 5
+
 #include "../utils/utils.h"
+#include "toolbox.cpp"
 
 Hand::Hand(){
-	this->n_cards_eval = 7;
+	this->n_total_hand = 7;
 	list<Card> empty_list;
-	for (unsigned int i = 0; i < 10; i++) {
+	for (unsigned int i = 0; i < 9; i++) {
 		this->config.push_back(empty_list);
 	}
-
-	this->n_monte_carlo_sampling = 1000;
+	this->n_monte_carlo_sampling = 10000;
 	this->is_evaluated = false;
-	this->evaluated_average_value = 0;
+	this->is_averaged= false;
+	this->average_value = 0;
+	this->value = 0;
+	this->cards = new list<Card>;
 
+	//TODO
 	this->value_map = NULL;
 }
 
-Hand::Hand(const list<Card> &cards) :Hand() {
+Hand::Hand(list<Card> *cards):Hand(){
 	this->cards = cards;
-}
-
-Hand::Hand(Deck & deck, unsigned int hand_size) :Hand() {
-	for (unsigned int i = 0; i < hand_size; i++) {
-		this->cards.push_back(deck.random_card());
-	}
 }
 
 Hand::~Hand() {
@@ -37,42 +42,47 @@ void Hand::init_config() {
 }
 
 list<Card> Hand::get_cards() const {
-	return this->cards;
+	return *this->cards;
 }
 
 void Hand::clear() {
-	this->cards.clear();
+	this->cards->clear();
 	this->is_evaluated = false;
+	this->is_averaged= false;
 }
 
-void Hand::set_cards(const list<Card> &cards) {
+void Hand::set_cards(list<Card> *cards) {
 	this->cards = cards;
 	this->is_evaluated = false;
+	this->is_averaged= false;
+}
+
+void Hand::push_back(const Card &card) {
+	this->cards->push_back(card);
+	this->is_evaluated = false;
+	this->is_averaged= false;
+}
+
+void Hand::pop_back() {
+	this->cards->pop_back();
+	this->is_evaluated = false;
+	this->is_averaged= false;
+}
+
+void Hand::add_cards(list<Card> &cards){
+	this->cards->insert(this->cards->end(), cards.begin(), cards.end());
+	this->is_evaluated = false;
+	this->is_averaged= false;
 }
 
 void Hand::set_map(std::unordered_map<string, float> * map){
 	this->value_map = map;
 }
 
-void Hand::push_back(const Card &card) {
-	this->cards.push_back(card);
-	this->is_evaluated = false;
-}
-
-void Hand::pop_back() {
-	this->is_evaluated = false;
-	this->cards.pop_back();
-}
-
-void Hand::add_cards(list<Card> &cards) {
-	this->cards.insert(this->cards.end(), cards.begin(), cards.end());
-	this->is_evaluated = false;
-}
-
 bool Hand::operator <(Hand& Ha) {
 	bool ret = false;
-	float val1 = this->get_full_hand_average_value();
-	float val2 = Ha.get_full_hand_average_value();
+	float val1 = this->get_average_value();
+	float val2 = Ha.get_average_value();
 	if (val1 < val2) {
 		ret = true;
 	} else {
@@ -81,174 +91,101 @@ bool Hand::operator <(Hand& Ha) {
 	return ret;
 }
 
-string Hand::card_list_to_str(const list<Card> &card_list) {
-	list<Card>::const_iterator j;
-	string hand_str = "";
-	for (j = card_list.begin(); j != card_list.end(); j++) {
-		hand_str += j->to_str() + " ";
-	}
-	return hand_str;
+string Hand::to_str() const {
+	return card_list_to_str(*this->cards);
 }
 
-string Hand::to_str() const {
-	return this->card_list_to_str(this->cards);
+string Hand::h_value() const{
+	return str_h_function(this->cards);
 }
 
 list<Card> Hand::get_final_hand() const {
 	return this->final_hand;
 }
 
-float Hand::get_value(){
-	this->cards.sort();
-	string key = this->h_value();
-//	cout<<this->to_str()<<endl;
-	if (this->value_map != NULL){
-		if(this->value_map->find(key) == this->value_map->end()){
-	//		cout<<this->to_str()<<endl;
-			float value = this->get_full_hand_average_value();
-	//		this->value_map->insert({key, value});
-			return value;
+float Hand::get_average_value(){
+	if(!this->is_averaged){
+//		this->average_value = this->average_value_combinatorial(this->n_total_hand);
+		this->average_value = this->average_value_from_MC(this->n_total_hand, this->n_monte_carlo_sampling);
+//		this->average_value = this->average_value_from_map(map);
+		this->is_averaged = true;
+	}
+	return this->average_value;
+}
+
+float Hand::average_value_from_MC(unsigned int n_total_cards, unsigned int n_samples){
+	float average_value = 0;
+	unsigned int n_card_to_add = n_total_cards - this->cards->size();
+	for (unsigned int i = 0; i < n_samples; i++) {
+		list<Card> temp_card_list = *this->cards;
+		Deck deck = Deck(temp_card_list);
+		this->init_config();
+		for (unsigned int jj = 0; jj < n_card_to_add; jj++) {
+			temp_card_list.push_back(deck.random_card());
 		}
-		else{
-			return this->value_map->at(key);
-		}
+		Hand hand = Hand(&temp_card_list);
+		unsigned int value = hand.evaluate();
+		average_value += (float) value / (float) n_samples;
 	}
-	else{
-		return this->get_full_hand_average_value();
-	}
+	return average_value;
 }
 
-float Hand::get_full_hand_average_value_from_map(std::unordered_map<string, float> * value_map ){
-	if (!this->is_evaluated) {
-		if (this->cards.size() < this->n_cards_eval) {
-			if (this->value_map != NULL){
-				string key = h_value();
-				if(this->value_map->find(key) == this->value_map->end()){
-					this->evaluated_average_value = value_map->at(key);
-				}
-				else{
-					//raise error
-				}
-			}
-			else{
-				//raise error
-			}
-		} else {
-			this->evaluated_average_value = this->evaluate();
-		}
-		this->is_evaluated = true;
-	}
-	return this->evaluated_average_value;
-}
-
-float Hand::get_full_hand_average_value() {
-	if (!this->is_evaluated) {
-		if (this->cards.size() < this->n_cards_eval) {
-			this->evaluated_average_value = this->combinatorial_average_value(this->n_cards_eval);
-//							this->monte_carlo_average_value(
-//													this->n_cards_eval,
-//													this->n_monte_carlo_sampling
-//													);
-		} else {
-			this->evaluated_average_value = this->evaluate();
-		}
-		this->is_evaluated = true;
-	}
-	return this->evaluated_average_value;
-}
-
-bool is_in_list(unsigned int card_id, list<Card> card_list) {
-	for (auto card = card_list.begin(); card != card_list.end(); card++) {
-		if (card_id == card->get_id()) {
-			return true;
-		}
-	}
-	return false;
-}
-
-unsigned int Hand::h_function(){
-	unsigned int h_code = 0;
-	this->cards.sort();
-	this->cards.reverse(); //can be removed
-	unsigned int power = 0;
-	for (auto card :this->cards){
-		h_code += card.get_id() * std::pow((float)52, (int)power);
-		power++;
-	}
-	return h_code;
-}
-
-string Hand::h_value(){
-	this->cards.sort();
-	return this->to_str();
-}
-
-float Hand::combinatorial_average_value(unsigned int n_total_cards) {
+//TODO to generalize to any number of card
+float Hand::average_value_combinatorial(unsigned int total_cards){
 	float average_value = 0;
 	unsigned int n_hand = 0;
-	list<Card> card_list = this->cards;
+	list<Card> card_list = *this->cards;
 	for (unsigned int i1 = 0; i1 < 52; i1++) {
-		if (!is_in_list(i1, card_list)) {
-			card_list.push_back(Card(i1));
+		if (!is_card_in_list(i1, card_list)) {
+			Card card1 = Card(i1);
+			card_list.push_back(card1);
 			for (unsigned int i2 = i1 + 1; i2 < 52; i2++) {
-				if (!is_in_list(i2, card_list)) {
-					card_list.push_back(Card(i2));
+				if (!is_card_in_list(i2, card_list)) {
+					Card card2 = Card(i2);
+					card_list.push_back(card2);
 					n_hand++;
-//					cout<<card_list_to_str(card_list)<<endl;
-					average_value = average_value*((float)n_hand - 1)/(float)n_hand +  (float)Hand(card_list).evaluate()/ (float)n_hand;
-					card_list.pop_back();
+					Hand hand = Hand(&card_list);
+					average_value = average_value*((float)n_hand - 1)/(float)n_hand
+									+ (float)hand.evaluate() / (float)n_hand;
+					card_list.remove(card2);
 				}
 			}
-			card_list.pop_back();
+			card_list.remove(card1);
 		}
 	}
 	return (unsigned int) average_value;
 }
 
-
-float Hand::monte_carlo_average_value(unsigned int n_total_cards, unsigned int n_draws) {
-	float average_value = 0;
-	unsigned int n_card_to_add = n_total_cards - this->cards.size();
-	list<Card> temp_card_list = this->cards;
-	for (unsigned int i = 0; i < n_draws; i++) {
-		Deck deck = Deck(this->cards);
-		this->init_config();
-		for (unsigned int jj = 0; jj < n_card_to_add; jj++) {
-			this->cards.push_back(deck.random_card());
-		}
-		unsigned int value = this->evaluate();
-		average_value += (float) value / (float) n_draws;
-//		cout<<this->to_str()<<endl;
-		this->cards = temp_card_list;
-	}
-	return average_value;
+float Hand::average_value_from_map(std::unordered_map<string, float> * value_map){
+	//get the right map
+	//return the value
+	return 0;
 }
 
 void Hand::scan() {
 	this->init_config();
-	this->cards.sort();
+	this->cards->sort();
 	list<Card> list_successive;
 	list<Card> list_similar;
-	list<Card>::iterator card = this->cards.begin();
-	while (card != this->cards.end()) {
+	list<Card>::iterator card = this->cards->begin();
+	while (card != this->cards->end()) {
 		list_similar.clear();
 		unsigned int rank = card->get_rank();
 		list_successive.push_back(*card);
-
-		while (rank == card->get_rank() and card != this->cards.end()) {
-			this->config[card->get_suit() + 5].push_back(*card);
+		while (rank == card->get_rank() and card != this->cards->end()) {
+			this->config[card->get_suit() -1 + ID_FLUSH].push_back(*card);
 			list_similar.push_back(*card);
 			card++;
 		}
 		this->config[list_similar.size()].merge(list_similar);
-		if (card->get_rank() != rank + 1 or card == this->cards.end()) {
+		if (card->get_rank() != rank + 1 or card == this->cards->end()) {
 			if (list_successive.size() >= 5) {
-				this->config[0].merge(list_successive);
+				this->config[ID_STRAIGHT].merge(list_successive);
 			} else if (list_successive.size() == 4
 					and list_successive.back().get_rank() == Card::Rank::_5
-					and this->cards.back().get_rank() == Card::Rank::_A) {
-				list_successive.push_front(this->cards.back());
-				this->config[0].merge(list_successive);
+					and this->cards->back().get_rank() == Card::Rank::_A) {
+				list_successive.push_front(this->cards->back());
+				this->config[ID_STRAIGHT].merge(list_successive);
 			}
 			list_successive.clear();
 		}
@@ -256,105 +193,151 @@ void Hand::scan() {
 
 }
 
-void Hand::display_config() { //const {
-//	vector<list<Card>*>::iteraror conf = this->config.begin();
-	cout<<"Straight      : "<<Hand(this->config[0]).to_str()<<endl;
-	cout<<"Single        : "<<Hand(this->config[1]).to_str()<<endl;
-	cout<<"Paired        : "<<Hand(this->config[2]).to_str()<<endl;
-	cout<<"Double Paired : "<<Hand(this->config[3]).to_str()<<endl;
-	cout<<"Tripple       : "<<Hand(this->config[4]).to_str()<<endl;
-	cout<<"Squared       : "<<Hand(this->config[5]).to_str()<<endl;
-	cout<<"Flush 1       : "<<Hand(this->config[6]).to_str()<<endl;
-	cout<<"Flush 2       : "<<Hand(this->config[7]).to_str()<<endl;
-	cout<<"Flush 3       : "<<Hand(this->config[8]).to_str()<<endl;
-	cout<<"Flush 4       : "<<Hand(this->config[9]).to_str()<<endl;
+void Hand::display_config()const { //const {
+	cout<<"Straight      : "<<card_list_to_str(this->config[ID_STRAIGHT])<<endl;
+	cout<<"Single        : "<<card_list_to_str(this->config[ID_SINGLE])<<endl;
+	cout<<"Paired        : "<<card_list_to_str(this->config[ID_PAIR])<<endl;
+	cout<<"Tripple       : "<<card_list_to_str(this->config[ID_TRIPPLE])<<endl;
+	cout<<"Squared       : "<<card_list_to_str(this->config[ID_SQUARE])<<endl;
+	cout<<"Flush 1       : "<<card_list_to_str(this->config[ID_FLUSH])<<endl;
+	cout<<"Flush 2       : "<<card_list_to_str(this->config[ID_FLUSH+1])<<endl;
+	cout<<"Flush 3       : "<<card_list_to_str(this->config[ID_FLUSH+2])<<endl;
+	cout<<"Flush 4       : "<<card_list_to_str(this->config[ID_FLUSH+3])<<endl;
 }
 
 unsigned int Hand::evaluate() {
-	this->scan();
-//	cout<<this->to_str()<<endl;
-//	this->display_config();
-	if (this->is_square()) {
-//		cout<<"SQUARE"<<endl;
-		this->evaluated_average_value = this->value_square();
-	} else if (this->is_full_house()) {
-//		cout<<"FULL HOUSE"<<endl;
-		this->evaluated_average_value = this->value_full_house();
-	} else if (this->is_flush()) {
-		if (this->is_straight()) {
-			if (this->is_straight_flush()) {
-//				cout<<"STRAIGHT FLUSH"<<endl;
-				this->evaluated_average_value = this->value_straight_flush();
+	if(!this->is_evaluated){
+		this->scan();
+		if (this->is_square()) {
+			this->value = this->value_square();
+		} else if (this->is_full_house()) {
+			this->value = this->value_fullhouse();
+		} else if (this->is_flush()) {
+			if (this->is_straight()) {//to fasten the execution
+				if (this->is_quintflush()) {
+					this->value = this->value_quintflush();
+					this->is_evaluated = true;
+					return this->value;
+				}
 			}
+			this->value = this->value_flush();
+		} else if (this->is_straight()) {
+			this->value = this->value_straight();
+		} else if (this->is_set()) {
+			this->value = this->value_set();
+		} else if (this->is_2pairs()) {
+			this->value = this->value_2pairs();
+		} else if (this->is_pair()) {
+			this->value = this->value_pair();
+		} else {
+			this->value = this->value_high_card();
 		}
-//		cout<<"FLUSH"<<endl;
-		this->evaluated_average_value = this->value_flush();
-	} else if (this->is_straight()) {
-//		cout<<"STRAIGHT"<<endl;
-		this->evaluated_average_value = this->value_straight();
-	} else if (this->is_set()) {
-//		cout<<"SET"<<endl;
-		this->evaluated_average_value = this->value_set();
-	} else if (this->is_double_paire()) {
-//		cout<<"DOUBLE PAIRE"<<endl;
-		this->evaluated_average_value = this->value_double_paire();
-	} else if (this->is_paire()) {
-//		cout<<"PAIRE"<<endl;
-		this->evaluated_average_value = this->value_paire();
-	} else {
-//		cout<<"HIGH CARD"<<endl;
-		this->evaluated_average_value = this->value_high_card();
+		this->is_evaluated = true;
 	}
-	this->is_evaluated = true;
-	return this->evaluated_average_value;
+	return this->value;
 }
 
-bool Hand::is_high_card() {
-	return (this->config[1].size() > 0);
+
+string Hand::hand_category_to_str(HandCategory category) {
+	switch(category){
+	case t_high:
+		return "high";
+	case t_pair:
+		return "pair";
+	case t_2pairs:
+		return "2 pairs";
+	case t_set:
+		return "set";
+	case t_straight:
+		return "straight";
+	case t_flush:
+		return "flush";
+	case t_fullhouse:
+		return "hull house";
+	case t_square:
+		return "square";
+	case t_quintflush:
+		return "quinte flush";
+	default:
+		return "Error: category does not exist";
+	}
 }
-bool Hand::is_paire() {
-	return (this->config[2].size() > 0);
+
+Hand::HandCategory Hand::get_category_from_scanned_hand() {
+	if (this->is_square()) {
+		return t_square;
+	} else if (this->is_full_house()) {
+		return t_fullhouse;
+	} else if (this->is_flush()) {
+		if (this->is_straight()) {
+			if (this->is_quintflush()) {
+				return t_quintflush;
+			}
+		}
+		return t_flush;
+	} else if (this->is_straight()) {
+		return t_straight;
+	} else if (this->is_set()) {
+		return t_set;
+	} else if (this->is_2pairs()) {
+		return t_2pairs;
+	} else if (this->is_pair()) {
+		return t_pair;
+	} else {
+		return t_high;
+	}
 }
-bool Hand::is_double_paire() {
-	return (this->config[2].size() > 2);
+
+
+bool Hand::is_high_card() const {
+	return (this->config[ID_SINGLE].size() > 0);
 }
-bool Hand::is_set() {
-	return (this->config[3].size() > 0);
+bool Hand::is_pair() const {
+	return (this->config[ID_PAIR].size() > 0);
 }
-bool Hand::is_straight() {
-	return (this->config[0].size() >= 5);
+bool Hand::is_2pairs() const {
+	return (this->config[ID_PAIR].size() > 2);
 }
-bool Hand::is_flush() {
-	return (this->config[6].size() >= 5 or this->config[7].size() >= 5
-			or this->config[8].size() >= 5 or this->config[9].size() >= 5);
+bool Hand::is_set() const {
+	return (this->config[ID_TRIPPLE].size() > 0);
 }
-bool Hand::is_full_house() {
-	bool full = (this->config[3].size() > 0 and this->config[2].size() > 0);
-	full = full or (this->config[3].size() > 3);
+bool Hand::is_straight() const {
+	return (this->config[ID_STRAIGHT].size() >= 5);
+}
+bool Hand::is_flush() const {
+	return (this->config[ID_FLUSH].size() >= 5 or this->config[ID_FLUSH+1].size() >= 5
+			or this->config[ID_FLUSH+2].size() >= 5 or this->config[ID_FLUSH+3].size() >= 5);
+}
+bool Hand::is_full_house() const{
+	bool full = (this->config[ID_TRIPPLE].size() > 0 and this->config[ID_PAIR].size() > 0);
+	full = full or (this->config[ID_TRIPPLE].size() > 3);
 	return full;
 }
-bool Hand::is_square() {
-	return (this->config[4].size() > 0);
+bool Hand::is_square() const {
+	return (this->config[ID_SQUARE].size() > 0);
 }
-bool Hand::is_straight_flush() {
+bool Hand::is_quintflush() {
 	list<Card> list_straight;
-	for (unsigned int suit = 1; suit <= 4; suit++) {
-		if (this->config[suit + 5].size() >= 5) {
+	for (unsigned int suit = 0; suit < 4; suit++) {
+		if (this->config[suit + ID_FLUSH].size() >= 5){
 			//check if there is a straight within the flush
-			list<Card>::iterator card = this->config[suit + 5].begin();
+			list<Card>::const_iterator card = this->config[suit + ID_FLUSH].begin();
 			unsigned int rank = card->get_rank() - 1;
-			while (card != this->config[suit + 5].end()) {
+			while (card != this->config[suit + ID_FLUSH].end()) {
 				if (rank + 1 == card->get_rank()) {
 					list_straight.push_back(*card);
-				} else {
+				}
+				else {
 					if (list_straight.size() >= 5) {
+						this->final_hand.clear();
 						this->final_hand = list_straight;
 						return true;
 					} else if (list_straight.size() == 4
 							and list_straight.back().get_rank()
 									== Card::Rank::_5
-							and this->config[suit + 5].back().get_rank()
+							and this->config[suit + ID_FLUSH].back().get_rank()
 									== Card::Rank::_A) {
+						this->final_hand.clear();
 						this->final_hand = list_straight;
 						return true;
 					}
@@ -397,47 +380,61 @@ unsigned int C_nk(unsigned int n, unsigned int k) {
 	}
 }
 
-unsigned int Hand::value_high_card() {
-//	this->display_config();
+unsigned int Hand::get_value_from_category_and_scanned_hand(Hand::HandCategory category){
+	switch(category){
+		case t_high:
+			return this->value_high_card();
+		case t_pair:
+			return this->value_pair();
+		case t_2pairs:
+			return this->value_2pairs();
+		case t_set:
+			return this->value_set();
+		case t_straight:
+			return this->value_straight();
+		case t_flush:
+			return this->value_flush();
+		case t_fullhouse:
+			return this->value_fullhouse();
+		case t_square:
+			return this->value_square();
+		case t_quintflush:
+			return this->value_quintflush();
+		default:
+			return -1;
+		}
+}
+
+unsigned int Hand::value_high_card() const {
 	unsigned int n_base = 0;
-	list<Card>::iterator card_iter = this->config[1].end();
+	list<Card>::const_iterator card_iter = this->config[ID_SINGLE].end();
 	for (unsigned int i = 0; i < 5; i++) {
 		card_iter--;
 //		this->final_hand.push_back(*card_iter);
 		n_base += C_nk(card_iter->get_rank() - 1, 5 - i) * 1020;
 		;
 	}
-	n_base = n_base - (this->config[1].back().get_rank() - 5) * 1020; //subtility if biggest card is As
-//	if (n_base < 0 or n_base > 1302540){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_high_card(): Value is not correct: "
-//				+ to_string(0) +" < " + to_string(n_base) + " < " + to_string(1302540));
-//	}
+	n_base = n_base - (this->config[ID_SINGLE].back().get_rank() - 5) * 1020; //subtility if biggest card is As
 	return n_base;
 }
 
-unsigned int Hand::value_paire() {
+unsigned int Hand::value_pair() const {
 	unsigned int n_base = 1302540;
-	unsigned int rank_paire = this->config[2].back().get_rank();
+	unsigned int rank_paire = this->config[ID_PAIR].back().get_rank();
 //	this->final_hand = *this->config[2];
 	n_base += (rank_paire - 1) * 84480; // = (rank_paire - 1)* C_nk(4, 2) * C_nk(12, 3) * (4*4*4);
-	list<Card>::iterator card_iter = this->config[1].end();
+	list<Card>::const_iterator card_iter = this->config[ID_SINGLE].end();
 	for (unsigned int i = 0; i < 3; i++) {
 		card_iter--;
 		n_base += C_nk(card_iter->get_rank() - 1, 3 - i) * pow(4, 3 - i);
 		//		this->final_hand.push_back(*card_iter);
 	}
-//	if (n_base < 1302540 or n_base > 2400780){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_paire(): Value is not correct: "
-//				+ to_string(1302540) +" < " + to_string(n_base) + " < " + to_string(2400780));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_double_paire() {
+unsigned int Hand::value_2pairs() const {
 	unsigned int n_base = 2400780; // =1302540 + 1098240;
-	list<Card>::iterator iter_paire = this->config[2].end();
+	list<Card>::const_iterator iter_paire = this->config[ID_PAIR].end();
 
 	iter_paire--;
 //	this->final_hand.push_back(*iter_paire);
@@ -448,9 +445,8 @@ unsigned int Hand::value_double_paire() {
 	iter_paire--;
 //	this->final_hand.push_back(*iter_paire);
 	unsigned int val_smallpaire = iter_paire->get_rank();
-	unsigned int val_bigpaire = this->config[2].back().get_rank(); //bigger paire
-
-	unsigned int val_simple_card = this->config[1].back().get_rank();
+	unsigned int val_bigpaire = this->config[ID_PAIR].back().get_rank(); //bigger paire
+	unsigned int val_simple_card = this->config[ID_SINGLE].back().get_rank();
 //	this->final_hand.push_back(this->config[1].back());
 
 	n_base += C_nk(val_bigpaire - 1, 2) * 1584; // = C_nk(val_bigpaire - 1, 2) * C_nk(4, 2) * C_nk(4, 2) * (13 -2)*4
@@ -463,20 +459,14 @@ unsigned int Hand::value_double_paire() {
 	} else {
 		n_base += (val_simple_card - 3) * 4;
 	}
-
-//	if (n_base < 2400780 or n_base > 2524332){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_double_paire(): Value is not correct: "
-//				+ to_string(2400780) +" < " + to_string(n_base) + " < " + to_string(2524332));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_set() {
+unsigned int Hand::value_set() const {
 	unsigned int n_base = 2524332; //=1302540 + 1098240 + 123552;
-	unsigned int val_triple = this->config[3].back().get_rank();
+	unsigned int val_triple = this->config[ID_TRIPPLE].back().get_rank();
 
-	list<Card>::iterator iter_simple = this->config[1].end();
+	list<Card>::const_iterator iter_simple = this->config[ID_SINGLE].end();
 	iter_simple--;
 	unsigned int val_big_simple_card = iter_simple->get_rank();
 	//	this->final_hand.push_back(*iter_simple);
@@ -488,62 +478,41 @@ unsigned int Hand::value_set() {
 	n_base += (val_triple - 1) * 4224; // = (val_triple -1)* C_nk(4, 3)*C_nk(12, 2)*4*4
 	n_base += C_nk(val_big_simple_card - 1, 2) * 16;
 	n_base += (val_small_simple_card - 1) * 4;
-
-//	if (n_base < 2524332 or n_base > 2579244){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_set(): Value is not correct: "
-//				+ to_string(2524332) +" < " + to_string(n_base) + " < " + to_string(2579244));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_straight() {
+unsigned int Hand::value_straight() const {
 	unsigned int n_base = 2579244; // = 1302540 + 1098240 + 123552 + 54912;
-	unsigned int val_high = this->config[0].back().get_rank();
+	unsigned int val_high = this->config[ID_STRAIGHT].back().get_rank();
 	n_base += (val_high - 4) * 1020;
-
 //	list<Card>::iterator iter_straight = this->config[0].end();
 //	for (unsigned int i= 0; i<5;i++){
 //		iter_straight--;
 //		this->final_hand.push_back(*iter_straight);
 //	}
-
-//	if (n_base < 2579244 or n_base > 2589444){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_traight(): Value is not correct: "
-//				+ to_string(2579244) +" < " + to_string(n_base) + " < " + to_string(2589444));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_flush() {
+unsigned int Hand::value_flush()const {
 	unsigned int n_base = 2589444; //=1302540 + 1098240 + 123552 + 54912 + 10200;
 	for (unsigned int i = 0; i < 4; i++) {
-		if (this->config[i + 5].size() >= 5) {
-			list<Card>::iterator iter_suit = this->config[5 + i].end();
+		if (this->config[i + ID_FLUSH].size() >= 5) {
+			list<Card>::const_iterator iter_suit = this->config[ID_FLUSH + i].end();
 			for (unsigned int j = 0; j < 5; j++) {
 				iter_suit--;
 				n_base += 4 * C_nk(iter_suit->get_rank() - 1, 5 - j);
 //				this->final_hand.push_back(*iter_suit);
 			}
-			n_base -= (this->config[5 + i].back().get_rank() - 5) * 4; //subtility if biggest card is As
+			n_base -= (this->config[ID_FLUSH + i].back().get_rank() - 5) * 4; //subtility if biggest card is As
 		}
 	}
-
-//	if (n_base < 2589444 or n_base > 2594552){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_flush(): Value is not correct: "
-//				+ to_string(2589444) +" < " + to_string(n_base) + " < " + to_string(2594552));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_full_house() {
+unsigned int Hand::value_fullhouse() const {
 	unsigned int n_base = 2594552; // = 1302540 + 1098240 + 123552 + 54912 + 10200 + 5108;
-
-	unsigned int val_triple = this->config[3].back().get_rank();
-
-	list<Card>::iterator iter_triple = this->config[3].end();
+	unsigned int val_triple = this->config[ID_TRIPPLE].back().get_rank();
+	list<Card>::const_iterator iter_triple = this->config[ID_TRIPPLE].end();
 	iter_triple--;
 //	this->final_hand.push_back(*iter_triple);
 	iter_triple--;
@@ -552,7 +521,7 @@ unsigned int Hand::value_full_house() {
 //	this->final_hand.push_back(*iter_triple);
 
 	unsigned int val_double;
-	if (this->config[3].size() >= 6) {
+	if (this->config[ID_TRIPPLE].size() >= 6) {
 		iter_triple--;
 //		this->final_hand.push_back(*iter_triple);
 //		iter_triple--;
@@ -564,7 +533,7 @@ unsigned int Hand::value_full_house() {
 //		this->final_hand.push_back(*iter_paire);
 //		iter_paire--;
 //		this->final_hand.push_back(*iter_paire);
-		val_double = this->config[2].back().get_rank();
+		val_double = this->config[ID_PAIR].back().get_rank();
 	}
 
 	n_base += (val_triple - 1) * 288;
@@ -573,39 +542,33 @@ unsigned int Hand::value_full_house() {
 	} else {
 		n_base += (val_double - 1) * 6;
 	}
-
-//	if (n_base < 2594552 or n_base > 2598296){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_full_house(): Value is not correct: "
-//				+ to_string(2594552) +" < " + to_string(n_base) + " < " + to_string(2598296));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_square() {
+unsigned int Hand::value_square() const {
 	unsigned int n_base = 2598296; //=1302540 + 1098240 + 123552 + 54912 + 10200 + 5108 + 3744;
 
-	unsigned int val_square = this->config[4].back().get_rank();
+	unsigned int val_square = this->config[ID_SQUARE].back().get_rank();
 	unsigned int val_single_card;
-	if (this->config[3].size() > 0) {
+	if (this->config[ID_TRIPPLE].size() > 0) {
 		val_single_card = this->config[3].back().get_rank();
 //		this->final_hand.push_back(this->config[3].back());
-	} else if (this->config[2].size() > 0) {
-		if ((this->config[1].size() > 0)) {
-			if (this->config[1].back().get_rank()
-					> this->config[2].back().get_rank()) {
-				val_single_card = this->config[1].back().get_rank();
+	} else if (this->config[ID_PAIR].size() > 0) {
+		if ((this->config[ID_SINGLE].size() > 0)) {
+			if (this->config[ID_SINGLE].back().get_rank()
+					> this->config[ID_PAIR].back().get_rank()) {
+				val_single_card = this->config[ID_SINGLE].back().get_rank();
 //				this->final_hand.push_back(this->config[1].back());
 			} else {
-				val_single_card = this->config[2].back().get_rank();
+				val_single_card = this->config[ID_PAIR].back().get_rank();
 //				this->final_hand.push_back(this->config[2]->back());
 			}
 		} else {
-			val_single_card = this->config[2].back().get_rank();
+			val_single_card = this->config[ID_PAIR].back().get_rank();
 //			this->final_hand.push_back(this->config[2]->back());
 		}
 	} else {
-		val_single_card = this->config[1].back().get_rank();
+		val_single_card = this->config[ID_SINGLE].back().get_rank();
 //		this->final_hand.push_back(this->config[1].back());
 	}
 
@@ -615,23 +578,12 @@ unsigned int Hand::value_square() {
 	} else {
 		n_base += (val_single_card - 2) * 4;
 	}
-
-//	if (n_base < 2598296 or n_base > 2598920){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_square(): Value is not correct: "
-//				+ to_string(2598296) +" < " + to_string(n_base) + " < " + to_string(2598920));
-//	}
 	return n_base;
 }
 
-unsigned int Hand::value_straight_flush() {
+unsigned int Hand::value_quintflush() const {
 	unsigned int n_base = 2598920; //=1302540 + 1098240 + 123552 + 54912 + 10200 + 5108 + 3744 + 624;
 	unsigned int val_high = this->final_hand.back().get_rank();
 	n_base += (val_high - 4) * 4;
-//	if (n_base < 2598920 or n_base > 2598960){
-//		cout<<this->card_list_to_str(this->final_hand);
-//		throw runtime_error("Error in value_straight_flush(): Value is not correct: "
-//				+ to_string(2598920) +" < " + to_string(n_base) + " < " + to_string(2598960));
-//	}
 	return n_base;
 }

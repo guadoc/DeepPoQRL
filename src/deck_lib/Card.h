@@ -33,7 +33,7 @@ public:
 		_7,
 		_8,
 		_9,
-		_10,
+		_T,
 		_J,
 		_Q,
 		_K,
@@ -58,8 +58,6 @@ public:
 	Rank get_rank() const;
 	Suit get_suit() const;
 	string to_str() const;
-//	void display_card(SDL_Renderer * renderer, int coordX,  int coordY, int sizeX, int sizeY) const;
-
 
 private:
 	Rank rank;

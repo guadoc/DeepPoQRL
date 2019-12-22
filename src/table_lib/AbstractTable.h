@@ -2,13 +2,11 @@
  * table.h
  *
  *  Created on: Dec 8, 2018
- *      Author: walnutalgo
+ *      Author: Michael Blot
  */
 
 #ifndef TABLE_LIB_AbstractTable_H_
 #define TABLE_LIB_AbstractTable_H_
-
-
 
 //#pragma once
 
@@ -32,12 +30,12 @@ public:
 	unsigned int get_diff_last_raises(void) const;
 	unsigned int get_last_raise() const;
 	unsigned int get_pot()const;
+	list<unsigned int> get_side_pots();
+	list<list<AbstractPlayer*>> get_side_pots_player_list();
+	unsigned int get_total_pot();
 	unsigned int get_blend_value()const;
 	vector<AbstractPlayer*> get_players() const;
 	Hand get_board() const;
-	unsigned int get_board_average_value();
-	unsigned int count_in_hand();
-
 	string to_str() const;
 
 	enum Street
@@ -49,32 +47,40 @@ public:
 		};
 
 
+	void distribute_card_to_board(Card);
 	void distribute_card_to_board();
 	virtual void distribute_street(AbstractTable::Street);
 	virtual void distribute_preflop();
-//	void distribute_flop();
-//	void distribute_turn();
-//	void distribute_river();
+
+
 
 	void update_current_raises(unsigned int);
 
-	void set_blends();
 	virtual void init_hand();
-	virtual void play_hand();
+	void clear_board();
+	void set_blends();
+	void init_raise_historic();
+	virtual void init_players_hand();
 
+	virtual void play_hand();
 	void run_pre_flop();
 	void run_street(AbstractTable::Street);
 	virtual bool run_full_pre_flop();
 	virtual bool run_full_street(AbstractTable::Street, bool);
+	virtual void showdown(bool);
 	bool gather_pots();
 	void fill_side_pots(list<unsigned int> &);
 
-	virtual void distribute_pot_to_best_hands();
-	virtual void distribute_side_pot_to_best_hands(list<AbstractPlayer*> & players , unsigned int pot);
-	virtual void distribute_side_pots_to_best_hands();
+	void distribute_pot_to_best_hands(list<AbstractPlayer*>, unsigned int);
+	void distribute_pot_to_best_hands();
+	void distribute_side_pots_to_best_hands();
 	virtual void player_gets_pot(AbstractPlayer* player, unsigned int pot);
 
 	virtual void close_hand();
+
+	/*Information for bots*/
+	float get_board_average_value();
+	unsigned int count_in_hand();
 
 
 protected:
@@ -112,7 +118,6 @@ protected:
 	 * side_pots and side_pot_player are useful whenever there is player all in
 	 */
 
-
 	unsigned int big_blend;
 	unsigned int small_blend;
 	/*
@@ -130,7 +135,6 @@ protected:
 	/*
 	 * last_raise and before_last raise are used to control that any raise is conform
 	 */
-
 
 	unsigned int dealer;
 	/*

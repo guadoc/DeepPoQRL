@@ -17,6 +17,8 @@ public:
 	PlayerRandom(AbstractTable* table, unsigned int);
 	~PlayerRandom();
 
+	Action random_play();
+
 	Action play_preflop();
 	Action play_flop();
 	Action play_turn();

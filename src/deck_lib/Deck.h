@@ -18,11 +18,15 @@ class Deck
 public:
 	Deck(void);
 	Deck(list<Card> &);
+	Deck(vector<bool>&);
+	Deck(const Deck &);
+	list<Card> get_distributed_cards_list() const;
+	vector<bool> get_distributed_cards() const;
 	Card random_card(void);
-	void print_distributed_cards(void);
 	void shuffle(void);
+	string distributed_cards_to_str(void) const;
 private:
-	list<Card> distributed_cards;
+	vector<bool> is_distributed;
 };
 
 
