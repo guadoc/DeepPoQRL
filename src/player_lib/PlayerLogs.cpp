@@ -21,9 +21,9 @@ PlayerLogs::PlayerLogs(string id, float lr):AbstractPlayer(id){
 }
 
 
-PlayerLogs::PlayerLogs(AbstractTable * table):AbstractPlayer(table){
-
-}
+//PlayerLogs::PlayerLogs(AbstractTable * table):AbstractPlayer(table){
+//
+//}
 
 PlayerLogs::PlayerLogs(AbstractTable * table, unsigned int position):AbstractPlayer(table, position){
 

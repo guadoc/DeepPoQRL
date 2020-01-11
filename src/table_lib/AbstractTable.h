@@ -14,10 +14,10 @@
 #include "../deck_lib/Deck.h"
 #include "../deck_lib/Card.h"
 #include "../deck_lib/Hand.h"
-#include "../player_lib/PlayerRandom.h"
-#include "../utils/utils.h"
+#include "../player_lib/AbstractPlayer.h"
 
 using namespace std;
+//class AbstractPlayer;
 
 class AbstractTable {
 public:

@@ -1,16 +1,17 @@
-- Why do I have to include AbstractPlayer to call assert function ??
+- why do I have to include AbstractPlayer to call assert function ??
 
-- What to do with Define of global variable (N_PLAYERS, BASE_STAKE, BLENDS,...)
+- what to do with #define of global variable (N_PLAYERS, BASE_STAKE, BLENDS,...)
 
 - unit test:
-	- déroulement d'une main pour abstracttable
+	- déroulement d'une main pour AbstractTable (mocking AbstractPlayer)
 	- evaluation pour hand
-	- hand mapping (à retravailler)
+	- hand mapping (à retravailler, à terminer)
+	- gather pots (player and pots)
+	- test save the PlayerBots
 	
-- faire une toolbox
-	- card_list_to_str()
-	
-- optim avec Card* dans Hand pour éviter les recopie dans les Hand de chaque joueur
+- optim avec Card* dans Hand pour eviter les recopies dans les Hand de chaque joueur
 
-	
-!! abstractplayer remettre set_hand
+- value quiteflush 
+- permettre is_quinte_flush to be const and do not use final hand except for debug
+
+

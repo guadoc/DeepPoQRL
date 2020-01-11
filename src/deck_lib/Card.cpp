@@ -6,9 +6,9 @@
  */
 
 
+//#include <util_graphic/graphic_toolbox.h>
 #include "Card.h"
 
-#include "../utils/utils.h"
 using namespace std;
 
 Card::Card(void):rank(Rank::_ERROR_RANK), suit(Suit::_ERROR_SUIT), id(0){}

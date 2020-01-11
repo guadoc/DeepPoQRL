@@ -7,6 +7,7 @@
 #include "../../player_lib/AbstractPlayer.h"
 #include "../../deck_lib/Hand.h"
 #include "../../deck_lib/Card.h"
+#include "../../toolbox.cpp"
 
 #define LEVEL_MIN 0
 #define LEVEL_PAIR 1302540
@@ -32,7 +33,6 @@ public:
 
 	int run_tests(void){
 		cout<<"Running Hand unit tests"<<endl;
-		this->test_hand_init();
 		this->test_adversarial();
 		this->test_categories();
 		this->test_all_combos_5_cards();
@@ -41,20 +41,10 @@ public:
 	}
 
 	//TODO
-	int test_hand_init(){
-		return 0;
-	}
+	//test_hand_init
+	//test_scan Seems to work well so far
+	//test_values
 
-	//TODO
-	int test_scan(){
-		//Seems to work well so far
-		return 0;
-	}
-
-	//TODO
-	int test_values(){
-		return 0;
-	}
 
 	int test_add_card(){
 		string card_list = "";
@@ -324,9 +314,9 @@ public:
 
 	bool test_hand_cat(list<Card> cards, Hand::HandCategory expected_category, unsigned int level_down, unsigned int level_up){
 		Hand hand = Hand(&cards);
-		hand.scan();
+		vector<list<Card>> config = hand.scan();
 		unsigned int hand_value = hand.evaluate();
-		return hand_value < level_up and hand_value >= level_down and hand.get_category_from_scanned_hand() == expected_category;
+		return hand_value < level_up and hand_value >= level_down and hand.get_category_from_config(config) == expected_category;
 	}
 
 	int test_high_(){
@@ -340,8 +330,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_high);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_high);
 		return 0;
 	}
 
@@ -356,8 +346,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_pair);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_pair);
 		return 0;
 	}
 
@@ -372,8 +362,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_set);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_set);
 		return 0;
 	}
 
@@ -388,8 +378,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_2pairs);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_2pairs);
 		return 0;
 	}
 
@@ -404,8 +394,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_straight);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_straight);
 		return 0;
 	}
 
@@ -420,8 +410,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_flush);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_flush);
 		return 0;
 	}
 
@@ -436,8 +426,8 @@ public:
 			Card(Rank::_9, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_fullhouse);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_fullhouse);
 		return 0;
 	}
 
@@ -452,8 +442,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_square);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_square);
 		return 0;
 	}
 
@@ -468,8 +458,8 @@ public:
 			Card(Rank::_K, Suit::_C)
 		};
 		Hand hand = Hand(&hand_cards);
-		hand.scan();
-		assert(hand.get_category_from_scanned_hand() == Hand::t_quintflush);
+		vector<list<Card>> config = hand.scan();
+		assert(hand.get_category_from_config(config) == Hand::t_quintflush);
 		return 0;
 	}
 
@@ -479,7 +469,7 @@ public:
 		clock_t start = clock();
 		for (unsigned int i1 = 0; i1<52; i1++){
 			if(verbose){
-				utils::progress_bar((float)i1/(float)52);
+				progress_bar((float)i1/(float)52);
 			}
 			Card card1 = Card(i1);
 			hand_card_list.push_back(card1);
@@ -498,9 +488,9 @@ public:
 							hand_card_list.push_back(card5);
 							/*TREATMENT OF CARD LIST */
 							Hand hand = Hand(&hand_card_list);
-							hand.scan();
+							vector<list<Card>> config = hand.scan();
 							combos[0]++;
-							combos[hand.get_category_from_scanned_hand()]++;
+							combos[hand.get_category_from_config(config)]++;
 							/*END OF TREATMENT OF CARD LIST */
 							hand_card_list.remove(card5);
 						}
@@ -528,7 +518,7 @@ public:
 			cout<<endl;
 			cout<<"Total: "<<combos[0]<<", expected "<<expected_combos[0]<<". Diff["<<expected_combos[0] - combos[0]<<"]"<<endl;
 			for (unsigned int i=1; i<10; i++){
-				cout<<Hand::hand_category_to_str(static_cast<Hand::HandCategory>(i))<<": "<<combos[i]<<", expected "<<expected_combos[i]<<". Diff["<<expected_combos[i] - combos[i]<<"]"<<endl;
+				cout<<Hand::category_to_str(static_cast<Hand::HandCategory>(i))<<": "<<combos[i]<<", expected "<<expected_combos[i]<<". Diff["<<expected_combos[i] - combos[i]<<"]"<<endl;
 			}
 			double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
 			cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
@@ -546,7 +536,7 @@ public:
 		clock_t start = clock();
 		for (unsigned int i1 = 0; i1<52; i1++){
 			if(verbose){
-				utils::progress_bar((float)i1/(float)52);
+				progress_bar((float)i1/(float)52);
 			}
 			Card card1 = Card(i1);
 			hand_card_list.push_back(card1);
@@ -570,9 +560,9 @@ public:
 									hand_card_list.push_back(card7);
 									/*TREATMENT OF CARD LIST */
 									Hand hand = Hand(&hand_card_list);
-									hand.scan();
+									vector<list<Card>> config = hand.scan();
 									combos[0]++;
-									combos[hand.get_category_from_scanned_hand()]++;
+									combos[hand.get_category_from_config(config)]++;
 									/*END OF TREATMENT OF CARD LIST */
 									hand_card_list.remove(card7);
 								}
@@ -604,7 +594,7 @@ public:
 			cout<<endl;
 			cout<<"Total: "<<combos[0]<<", expected "<<expected_combos[0]<<". Diff["<<expected_combos[0] - combos[0]<<"]"<<endl;
 			for (unsigned int i=1; i<10; i++){
-				cout<<Hand::hand_category_to_str(static_cast<Hand::HandCategory>(i))<<": "<<combos[i]<<", expected "<<expected_combos[i]<<". Diff["<<expected_combos[i] - combos[i]<<"]"<<endl;
+				cout<<Hand::category_to_str(static_cast<Hand::HandCategory>(i))<<": "<<combos[i]<<", expected "<<expected_combos[i]<<". Diff["<<expected_combos[i] - combos[i]<<"]"<<endl;
 			}
 			double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
 			cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
@@ -617,72 +607,7 @@ public:
 	}
 
 
-	int test_all_combos_5_cards_TEST(){
-		list<Card*> hand_card_list;
-		vector<unsigned int> combos = vector<unsigned int>(10, 0);
-		clock_t start = clock();
-		for (unsigned int i1 = 0; i1<52; i1++){
-			if(verbose){
-				utils::progress_bar((float)i1/(float)52);
-			}
-			Card *card1 = new Card(i1);
-			hand_card_list.push_back(card1);
-			for (unsigned int i2 = i1 + 1; i2 < 52; i2++){
-//				utils::progress_bar((float)i2/(float)52);
-				Card *card2 = new Card(i2);
-				hand_card_list.push_back(card2);
-				for (unsigned int i3 = i2 + 1; i3 < 52; i3++){
-					Card *card3 = new Card(i3);
-					hand_card_list.push_back(card3);
-					for (unsigned int i4 = i3 + 1; i4 < 52; i4++){
-						Card *card4 = new Card(i4);
-						hand_card_list.push_back(card4);
-						for (unsigned int i5 = i4 + 1; i5 < 52; i5++){
-							Card *card5 = new Card(i5);
-							hand_card_list.push_back(card5);
-							/*TREATMENT OF CARD LIST */
-							HandTest hand = HandTest(&hand_card_list);
-							hand.scan();
-							combos[0]++;
-							combos[hand.get_category_from_scanned_hand()]++;
-							/*END OF TREATMENT OF CARD LIST */
-							hand_card_list.remove(card5);
-						}
-						hand_card_list.remove(card4);
-					}
-					hand_card_list.remove(card3);
-				}
-				hand_card_list.remove(card2);
-			}
-			hand_card_list.remove(card1);
-		}
-		vector<unsigned int> expected_combos = {
-			2598960,
-			1302540,
-			1098240,
-			123552,
-			54912,
-			10200,
-			5108,
-			3744,
-			624,
-			40
-		};
-		if(this->verbose){
-			cout<<endl;
-			cout<<"Total: "<<combos[0]<<", expected "<<expected_combos[0]<<". Diff["<<expected_combos[0] - combos[0]<<"]"<<endl;
-			for (unsigned int i=1; i<10; i++){
-				cout<<Hand::hand_category_to_str(static_cast<Hand::HandCategory>(i))<<": "<<combos[i]<<", expected "<<expected_combos[i]<<". Diff["<<expected_combos[i] - combos[i]<<"]"<<endl;
-			}
-			double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
-			cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
-		}
-		assert(combos[0] == expected_combos[0]);
-		for (unsigned int i=1; i<10; i++){
-			assert(combos[i] == expected_combos[i]);
-		}
-		return 0;
-	}
+
 };
 
 

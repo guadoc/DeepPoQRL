@@ -13,7 +13,7 @@ class PlayerRandom : public ParentPlayerRandom {
 public:
 	PlayerRandom(void);
 	PlayerRandom(string id);
-	PlayerRandom(AbstractTable * table);
+//	PlayerRandom(AbstractTable * table);
 	PlayerRandom(AbstractTable* table, unsigned int);
 	~PlayerRandom();
 

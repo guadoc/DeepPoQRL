@@ -40,44 +40,43 @@ public:
 	unsigned int h_function() const;
 	string h_value() const;
 
-	float average_value_from_MC(unsigned int total_cards, unsigned int n_samples);
-	float average_value_combinatorial(unsigned int total_cards);
-	float average_value_from_map(std::unordered_map<string, float> * value_map);
+	float average_value_from_MC(unsigned int total_cards, unsigned int n_samples) const;
+	float average_value_combinatorial(unsigned int total_cards) const;
+	float average_value_from_map(std::unordered_map<string, float> * value_map) const;
 	float get_average_value();
 
 	unsigned int evaluate();
-	void scan();
-	HandCategory get_category_from_scanned_hand();
-	static string hand_category_to_str(HandCategory);
-	unsigned int get_value_from_category_and_scanned_hand(HandCategory);
+	vector<list<Card>> scan() const;
+	HandCategory get_category_from_config(vector<list<Card>> &config) const;
+	static string category_to_str(HandCategory);
+	unsigned int get_value_from_category_and_config(HandCategory, vector<list<Card>> &config) const;
 
 
 	bool operator<(Hand &Ha);
 
-	bool is_full_house() const ;
-	bool is_square() const;
-	bool is_flush() const;
-	bool is_straight() const;
-	bool is_pair() const;
-	bool is_2pairs() const;
-	bool is_high_card() const;
-	bool is_set() const;
-	bool is_quintflush();
+	bool is_full_house(vector<list<Card>> &config) const ;
+	bool is_square(vector<list<Card>> &config) const;
+	bool is_flush(vector<list<Card>> &config) const;
+	bool is_straight(vector<list<Card>> &config) const;
+	bool is_pair(vector<list<Card>> &config) const;
+	bool is_2pairs(vector<list<Card>> &config) const;
+	bool is_high_card(vector<list<Card>> &config) const;
+	bool is_set(vector<list<Card>> &config) const;
+	bool is_quintflush(vector<list<Card>> &config) const;
 
-	unsigned int value_fullhouse() const;
-	unsigned int value_square() const;
-	unsigned int value_straight() const;
-	unsigned int value_high_card() const;
-	unsigned int value_pair() const;
-	unsigned int value_2pairs() const;
-	unsigned int value_set() const;
-	unsigned int value_flush() const;
-	unsigned int value_quintflush() const;
+	unsigned int value_fullhouse(vector<list<Card>> &config) const;
+	unsigned int value_square(vector<list<Card>> &config) const;
+	unsigned int value_straight(vector<list<Card>> &config) const;
+	unsigned int value_high_card(vector<list<Card>> &config) const;
+	unsigned int value_pair(vector<list<Card>> &config) const;
+	unsigned int value_2pairs(vector<list<Card>> &config) const;
+	unsigned int value_set(vector<list<Card>> &config) const;
+	unsigned int value_flush(vector<list<Card>> &config) const;
+	unsigned int value_quintflush(vector<list<Card>> &config) const;
 
 
 protected:
 	list<Card>* cards;
-	vector<list<Card>> config;
 	list<Card> final_hand;
 
 	bool is_evaluated;

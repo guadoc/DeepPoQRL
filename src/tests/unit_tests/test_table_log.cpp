@@ -6,6 +6,7 @@
  */
 
 #include "../../player_lib/PlayerLogs.h"
+#include "../../player_lib/PlayerRandom.h"
 #include "../../table_lib/TableLogs.h"
 
 class test_table_log

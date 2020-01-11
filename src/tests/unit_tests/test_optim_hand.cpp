@@ -6,6 +6,7 @@
  */
 #include "../../player_lib/AbstractPlayer.h"
 #include "../../deck_lib/Card.h"
+#include "../../toolbox.cpp"
 
 using Rank = Card::Rank;
 using Suit = Card::Suit;
@@ -189,12 +190,11 @@ public:
 		clock_t start = clock();
 		for (unsigned int i1 = 0; i1<52; i1++){
 			if(verbose){
-				utils::progress_bar((float)i1/(float)52);
+				progress_bar((float)i1/(float)52);
 			}
 			Card *card1 = new Card(i1);
 			hand_card_list.push_back(card1);
 			for (unsigned int i2 = i1 + 1; i2 < 52; i2++){
-//				utils::progress_bar((float)i2/(float)52);
 				Card *card2 = new Card(i2);
 				hand_card_list.push_back(card2);
 				for (unsigned int i3 = i2 + 1; i3 < 52; i3++){

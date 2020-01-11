@@ -1,8 +1,8 @@
+#include <deck_lib/deck_toolbox.cpp>
+#include <util_graphic/graphic_toolbox.cpp>
 #include "HandTest.h"
 #include <cmath>
 
-#include "../utils/utils.h"
-#include "toolbox.cpp"
 
 HandTest::HandTest(){
 	this->n_cards_eval = 7;

@@ -2,42 +2,33 @@
  * PlayerBot.h
  *
  *  Created on: Jun 10, 2019
- *      Author: walnutalgo
+ *      Author: Michael Blot
  */
 
 #ifndef PLAYER_LIB_PLAYERBOT_H_
 #define PLAYER_LIB_PLAYERBOT_H_
 
 #include <random>
+#include "PlayerStat.h"
 
-#define DEBUG 0
-
-#if DEBUG > 0
-	#include "PlayerLogs.h"
-	using ParentPlayerBot = PlayerLogs;
-#else
-	#include "AbstractPlayer.h"
-	using ParentPlayerBot = AbstractPlayer;
-#endif
+using ParentPlayerBot = PlayerStat;
 
 class PlayerBot : public ParentPlayerBot{
 
 public:
 	PlayerBot(void);
 	PlayerBot(string id);
-	PlayerBot(AbstractTable * table);
 	PlayerBot(AbstractTable * table, unsigned int);
 	virtual ~PlayerBot();
 
-	virtual void display_learning_params();
-
+	virtual string training_params_to_str() const;
 
 	void init_hand();
 	void close_hand();
 
 	void commit_chips(unsigned int);
 	void add_to_stake(unsigned int);
-	void update_stats();
+//	void update_stats();
 	void set_train_mode(bool);
 
 
@@ -55,7 +46,6 @@ public:
 	virtual Action play_turn()=0;
 	virtual Action play_river()=0;
 
-
 	Action raise_pot(unsigned int);
 	Action call_pot();
 	Action bet_pot(unsigned int);
@@ -65,7 +55,7 @@ public:
 protected:
 	bool train_mode;
 	int loss;
-	float param_stat; //can be a vector
+//	float param_stat; //can be a vector
 };
 
 #endif /* PLAYER_LIB_PLAYERBOT_H_ */

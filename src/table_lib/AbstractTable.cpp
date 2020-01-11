@@ -26,7 +26,7 @@ AbstractTable::AbstractTable(){
 AbstractTable::AbstractTable(unsigned int n_players):AbstractTable(){
 	this->n_players = n_players;
 	for (unsigned int position=0; position < this->n_players; position++){
-		AbstractPlayer * p = new PlayerRandom(this, position);
+		AbstractPlayer * p = new AbstractPlayer(this, position);
 		this->players.push_back(p);
 	}
 }

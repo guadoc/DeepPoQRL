@@ -5,7 +5,7 @@
 
 #include "../deck_lib/Hand.h"
 #include "../StdAfx.h"
-#include "StatPlayer.h"
+//#include "StatPlayer.h"
 
 
 #include <boost/archive/binary_iarchive.hpp>
@@ -16,14 +16,12 @@
 
 using namespace std;
 class AbstractTable;
-
-
+//class StatPlayer;
 
 class AbstractPlayer{
 public:
 	AbstractPlayer(void);
 	AbstractPlayer(string);
-	AbstractPlayer(AbstractTable *);
 	AbstractPlayer(AbstractTable *, unsigned int position);
 	virtual ~AbstractPlayer();
 
@@ -51,12 +49,10 @@ public:
 
 	virtual void commit_chips(unsigned int);
 	virtual void add_to_stake(unsigned int value);
-	virtual void update_stats();
 
 	unsigned int get_commitment(void) const;
 	Hand get_hand() const;
 	unsigned int get_stake() const;
-	StatPlayer get_stats() const;
 	unsigned int get_pos_on_table()const;
 	unsigned int get_bank_roll()const;
 	string get_id()const;
@@ -97,6 +93,7 @@ public:
 	virtual void transfert_in(boost::archive::binary_iarchive & iarch);
 	virtual void transfert_out(boost::archive::binary_oarchive &oa) const;
 	virtual string save_to_folder(string) const;
+	string save() const;
 	virtual string load_from_folder(string);
 	virtual string load_from_model(string);
 
@@ -173,14 +170,14 @@ protected:
 	 * It is also the re-buy amount
 	 */
 
-	StatPlayer player_stats;
-	/*
-	 * Contain the statistics about the player (evolution of the bankrooll, etc)
-	 */
-
 	bool open_hand;
 	/*
 	 * Indicates if the hand of the player will be visible in the graphic mode
+	 */
+
+	string folder_to_save;
+	/*
+	 * Folder where the player is saved when no folder is given in argumentss
 	 */
 };
 

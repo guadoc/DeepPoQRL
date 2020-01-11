@@ -63,7 +63,7 @@ public:
 		AbstractPlayer player = AbstractPlayer("id_test");
 		player.add_to_stake(77);
 		assert(player.get_stake() == 177);
-		string save_folder = player.save_to_folder("./unit_test/");
+		string save_folder = player.save_to_folder("./src/tests/unit_test/test_output_folder");
 
 		AbstractPlayer player2 = AbstractPlayer("autre_player");
 		player2.load_from_model(save_folder);

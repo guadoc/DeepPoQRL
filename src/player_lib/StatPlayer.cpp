@@ -1,39 +1,109 @@
 
 #include "StatPlayer.h"
+#include "toolbox.cpp"
+
+#include "/home/micha/workspace/matplotlib-cpp-master/matplotlibcpp.h"
+namespace plt = matplotlibcpp;
 
 StatPlayer::StatPlayer() {
-	// TODO Auto-generated constructor stub
-
+	this->init_hand_stats();
 }
 
 StatPlayer::~StatPlayer() {
-	// TODO Auto-generated destructor stub
+	for (auto & street_stat: this->hand_stats){
+		delete street_stat;
+	}
 }
 
-
-void StatPlayer::update_stats(unsigned int bankroll, unsigned int stake){
-	this->bank_roll_evolution.push_back(bankroll + stake);
-	this->stake_evolution.push_back(stake);
+void StatPlayer::reset_stats(){
+	for(auto & street_stat: this->hand_stats){
+		street_stat->played = 0;
+		street_stat->raise = 0;
+		street_stat->bet = 0;
+		street_stat->call = 0;
+		street_stat->check = 0;
+		street_stat->fold = 0;
+	}
 }
 
-void StatPlayer::update_stats(unsigned int bankroll, unsigned int stake, float param){
-	this->bank_roll_evolution.push_back(bankroll + stake);
-	this->stake_evolution.push_back(stake);
-	this->param_stat_evolution.push_back(param);
+void StatPlayer::init_hand_stats(){
+	this->hand_stats = vector<StreetStat*>(4, NULL);
+	for (auto & street_stat: this->hand_stats){
+		street_stat = this->street_stat_init();
+	}
 }
 
-void StatPlayer::plot_stats(string id){		
-	// command = "python src/script_python/plot_csv.py "+ file_to_save_log + "/bankroll.csv";
-	// command = "python src/script_python/plot_csv.py "+ file_to_save_log + "/param.csv";
+StatPlayer::StreetStat* StatPlayer::street_stat_init() const{
+	StreetStat* street_stat= new StreetStat({0, 0, 0, 0, 0, 0});
+	return street_stat;
+}
+
+vector<StatPlayer::StreetStat*> StatPlayer::get_hand_stats()const{
+	return this->hand_stats;
+}
+
+void StatPlayer::update_street_stat(AbstractTable::Street street, AbstractPlayer::Action action){
+	this->update_street_stat(this->hand_stats[street], action);
+}
+
+void StatPlayer::update_street_stat(StatPlayer::StreetStat* street_stat, AbstractPlayer::Action action){
+	street_stat->played++;
+	switch(action){
+	case AbstractPlayer::t_bet:
+		street_stat->bet++;
+		break;
+	case AbstractPlayer::t_raise:
+		street_stat->raise++;
+		break;
+	case AbstractPlayer::t_call:
+		street_stat->call++;
+		break;
+	case AbstractPlayer::t_fold:
+		street_stat->fold++;
+		break;
+	case AbstractPlayer::t_check:
+		street_stat->check++;
+		break;
+	}
+}
+
+void StatPlayer::checkpoint(unsigned int bankroll){
+	float river_raise_proba = ((float)this->hand_stats[AbstractTable::t_river]->bet + (float)this->hand_stats[AbstractTable::t_river]->raise) / ((float)this->hand_stats[AbstractTable::t_river]->played);
+	this->river_aggression_proba.push_back(river_raise_proba);
+	this->bankroll.push_back(bankroll);
+}
+
+void StatPlayer::plot_stats(void) const{
+	plt::close();
+	plt::figure();
+	plt::subplot(3, 1, 1);
+	plt::plot({std::begin(this->bankroll), std::end(this->bankroll)});
+	plt::subplot(3, 1, 2);
+	plt::plot({std::begin(this->river_aggression_proba), std::end(this->river_aggression_proba)});
+	plt::pause(0.05);
+	plt::close();
+	plt::show();
+}
+
+void StatPlayer::save_stats(string foldername) const{
+	string file_to_save_log = foldername + "/stats/";
+	list_to_scv<list<unsigned int >>(file_to_save_log + "bankroll.csv", this->bankroll);
+	list_to_scv<list<float >>(file_to_save_log + "river_aggression_proba.csv", this->river_aggression_proba);
+//	string command = "python3 src/script_python/plot_csv.py " + file_to_save_log + " &";
 //	system(command.c_str());
 }
 
-void StatPlayer::save_stats(string folder_name){
-	string file_to_save_log = folder_name + "/stats/";
-	string command = "mkdir " + file_to_save_log;
-	system(command.c_str());	
-	utils::list_to_scv<list<unsigned int >>(file_to_save_log + "bankroll.csv", this->bank_roll_evolution);
-	utils::list_to_scv<list<float >>(file_to_save_log + "param.csv", this->param_stat_evolution);
-	cout<<"BankRoll"<<endl;
-	cout<<this->bank_roll_evolution.size()<<endl;
+string StatPlayer::street_stat_to_str(AbstractTable::Street street) const{
+	return this->street_stat_to_str(this->hand_stats[street]);
+}
+
+string StatPlayer::street_stat_to_str(StreetStat* stats) const{
+	string stat_str = "";
+	stat_str += " total[" + to_string(stats->played) + "],";
+	stat_str += " raise[" + to_string(stats->raise) + "],";
+	stat_str += " bet[" + to_string(stats->bet) + "],";
+	stat_str += " call[" + to_string(stats->call) + "],";
+	stat_str += " check[" + to_string(stats->check) + "],";
+	stat_str += " fold[" + to_string(stats->fold) + "]";
+	return stat_str;
 }

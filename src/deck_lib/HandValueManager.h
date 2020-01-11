@@ -12,9 +12,8 @@
 #include <fstream>
 #include <iostream>
 #include "../StdAfx.h"
-#include "../utils/utils.h"
 
-#include "toolbox.cpp"
+#include "../toolbox.cpp"
 
 #include "Card.h"
 #include "Hand.h"
@@ -30,6 +29,12 @@ public:
 		boost::archive::binary_iarchive iarch(ifs);
 		iarch >> valueMap;
 		return valueMap;
+	}
+
+	static void fill_n_save_map(string filename){
+		unordered_map<string, float> * map = fill_map_7_cards();
+//		unordered_map<string, float> * map = fill_map_5_cards();
+		save_map(map, filename);
 	}
 
 	static void save_map(unordered_map<string, float> * map, string filename){
@@ -52,15 +57,16 @@ public:
 			}
 		}
 		cout << "key "<<argmax<<", value "<<max<<endl;
+		return 0;
 	}
 
-	static int fill_map_5_cards(string filename){
+	static unordered_map<string, float> * fill_map_5_cards(){
 		list<Card> hand_card_list;
 		unordered_map<string, float> * map = new unordered_map<string, float>;
-//		clock_t start = clock();
+		clock_t start = clock();
 		unsigned int n_hand = 0;
 		for (unsigned int i1 = 0; i1<52; i1++){
-			utils::progress_bar((float)i1/(float)52);
+			progress_bar((float)i1/(float)52);
 			Card card1 = Card(i1);
 			hand_card_list.push_back(card1);
 			for (unsigned int i2 = i1 + 1; i2 < 52; i2++){
@@ -94,18 +100,77 @@ public:
 			hand_card_list.remove(card1);
 		}
 
-		cout<<map->size()<<endl;
-		save_map(map, filename);
+		cout<<"Map of size "<<map->size()<<" filled for "<<n_hand<<" hands"<<endl;
+		double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
+		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
+		return map;
 	}
+
+	static unordered_map<string, float> * fill_map_7_cards(){
+			list<Card> hand_card_list;
+			unordered_map<string, float> * map = new unordered_map<string, float>;
+			clock_t start = clock();
+			Hand hand = Hand(&hand_card_list);
+			unsigned int n_hand = 0;
+			for (unsigned int i1 = 0; i1<52; i1++){
+				progress_bar((float)i1/(float)52);
+				Card card1 = Card(i1);
+				hand_card_list.push_back(card1);
+				for (unsigned int i2 = i1 + 1; i2 < 52; i2++){
+	//				utils::progress_bar((float)i2/(float)52);
+					Card card2 = Card(i2);
+					hand_card_list.push_back(card2);
+					for (unsigned int i3 = i2 + 1; i3 < 52; i3++){
+						Card card3 = Card(i3);
+						hand_card_list.push_back(card3);
+						for (unsigned int i4 = i3 + 1; i4 < 52; i4++){
+							Card card4 = Card(i4);
+							hand_card_list.push_back(card4);
+							for (unsigned int i5 = i4 + 1; i5 < 52; i5++){
+								Card card5 = Card(i5);
+								hand_card_list.push_back(card5);
+								for (unsigned int i6 = i5 + 1; i6 < 52; i6++){
+									Card card6 = Card(i6);
+									hand_card_list.push_back(card6);
+									for (unsigned int i7 = i6 + 1; i7 < 52; i7++){
+										Card card7 = Card(i7);
+										hand_card_list.push_back(card7);
+
+//										Hand hand = Hand(&hand_card_list);
+//										cout<<hand.to_str()<<endl;
+			//							cout<<hand.h_value()<<endl;
+										n_hand++;
+										map->emplace(hand.h_value(), 1222222);//hand.evaluate());
+										hand_card_list.remove(card7);
+									}
+									hand_card_list.remove(card6);
+								}
+								hand_card_list.remove(card5);
+							}
+							hand_card_list.remove(card4);
+						}
+						hand_card_list.remove(card3);
+					}
+					hand_card_list.remove(card2);
+				}
+				hand_card_list.remove(card1);
+			}
+
+			cout<<"Map of size "<<map->size()<<" filled for "<<n_hand<<" hands"<<endl;
+			double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
+			cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
+			return map;
+		}
+
 
 	static int test_map_performances(){
 		list<Card> hand_card_list;
 		unordered_map<string, float> *map;
-		map = load_map("./hand_value_maps/map5cards.p");
+		map = load_map("./hand_value_maps/map5among7cards.p");
 		clock_t start = clock();
 
 		for (unsigned int i1 = 0; i1<52; i1++){
-			utils::progress_bar((float)i1/(float)52);
+			progress_bar((float)i1/(float)52);
 			Card card1 = Card(i1);
 			hand_card_list.push_back(card1);
 			for (unsigned int i2 = i1 + 1; i2 < 52; i2++){
@@ -138,7 +203,7 @@ public:
 		}
 		double elapsed = (double)(clock() - start) / CLOCKS_PER_SEC;
 		cout << "Duration: " + to_string((int) elapsed/60) +":"+ to_string((int)elapsed%60)<< endl;
-
+		return 0;
 	}
 };
 

@@ -6,64 +6,48 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-//#define DEBUG 1
-
-
-//#include "tests/test_table.cpp"
-//#include "tests/runs.cpp"
+#define DEBUG 1
 
 #include "tests/unit_tests/test_abstract_player.cpp"
 #include "tests/unit_tests/test_abstract_table.cpp"
+#include "tests/unit_tests/test_table_train.cpp"
 #include "tests/unit_tests/test_table_log.cpp"
 #include "tests/unit_tests/test_deck.cpp"
 #include "tests/unit_tests/test_hand.cpp"
+#include "tests/unit_tests/test_stat_player.cpp"
 
-//#include "tests/unit_tests/test_optim_hand.cpp"
 
 #include "deck_lib/HandValueManager.h"
 #include "tests/graphic_session.cpp"
+#include "tests/training_session.cpp"
 
-
+//#include "tests/unit_tests/test_plot.cpp"
 using namespace std;
 
-int main() {
-	bool verbose = true;
-//	test_abstract_player().run_tests();
-//	test_abstract_table().run_tests();
-//	test_cards().run_tests();
-//	test_deck().run_tests();
-	test_hand(verbose).run_tests();
-
-//	test_optim_hand(verbose).run_tests();
+#include "toolbox.cpp"
 
 
-//	test_abstract_table().test_distribute_pot_with_fold();
+int main(){
+//	bool verbose = true;
+//	test_abstract_player().test_all();
+//	test_abstract_table().test_all();
+//	test_cards().test_all();
+//	test_deck().test_all();
+//	test_hand(verbose).test_all();
+//	test_table_train().test_all();
 
+//	test_stat_player().test_all();
+
+//	test_table_train().test_performances();
+//	test_stat_player().test_save_n_plot();
 
 //	HandValueManager().fill_map_5_cards("./hand_value_maps/map5cards.p");
-//	HandValueManager().load_and_use_map();
-//	HandValueManager().test_map_performances();
 
-
-//	unsigned int n_hand = 100;
+	unsigned int n_hand = 10000;
 //	only_gui_players(n_hand);
 //	gui_vs_bots(n_hand, false);
+	Session sess = Session();
+	sess.train_individual("./bots/V2", n_hand);
 
-
-/******* TEST TABLE & GAME */
-//	test_table test = test_table();
-//	test.test_plot();
-//	test.test_train_table();
-//	test.test_torch();
-//	test.test_session();
-//	test.test_algo_g();
-//	test.test_trained_player();
-//	test.test_evolution();
-//	test.test_train_individual();
-//	test.test_save_and_load_playerV2();
-//	test.save_n_load_net();
-//	Runs run = Runs();
-//	run.run_evolution();
-//	run.run_train_individual();
 	return 0;
 }

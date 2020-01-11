@@ -8,9 +8,9 @@ public:
 	test_cards(){}
 
 	int run_tests(void){
-		cout<<"Running Deck unit tests"<<endl;
+		cout<<"Running Card unit tests"<<endl;
 		this->test_card_to_string();
-		cout<<"----Deck unit test finished successfully"<<endl;
+		cout<<"----Card unit test finished successfully"<<endl;
 		return 0;
 	}
 

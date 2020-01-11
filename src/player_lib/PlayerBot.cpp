@@ -2,7 +2,7 @@
  * PlayerBot.cpp
  *
  *  Created on: Jun 10, 2019
- *      Author: walnutalgo
+ *      Author: Michael Blot
  */
 
 #include "PlayerBot.h"
@@ -11,13 +11,6 @@
 
 PlayerBot::PlayerBot(void):ParentPlayerBot(){
 //	this->init_params();// TO CALL IN CHILD CLASS
-	this->loss = 0;
-	this->train_mode = true;
-	this->param_stat = 0;
-}
-
-PlayerBot::PlayerBot(AbstractTable * table):ParentPlayerBot(table){
-//	this->init_params();
 	this->loss = 0;
 	this->train_mode = true;
 	this->param_stat = 0;
@@ -42,8 +35,8 @@ PlayerBot::~PlayerBot() {
 	// TODO Auto-generated destructor stub
 }
 
-void PlayerBot::display_learning_params(){
- cout<<this->to_str();
+string PlayerBot::training_params_to_str() const{
+	return "";
 }
 
 
@@ -64,6 +57,7 @@ void PlayerBot::set_train_mode(bool train_mode){
 void PlayerBot::init_train_params(){
 	this->init_macro_params();
 	this->init_learning_params();
+//	cout<<this->training_params_to_str()<<endl;
 }
 
 void PlayerBot::init_train_params(std::default_random_engine& generator){
@@ -73,11 +67,11 @@ void PlayerBot::init_train_params(std::default_random_engine& generator){
 
 
 void PlayerBot::close_hand(){
+	ParentPlayerBot::close_hand();
 	if (this->train_mode){
 		this->train();
-		this->update_stats();
+//		this->update_stats();
 	}
-	ParentPlayerBot::close_hand();
 }
 
 void PlayerBot::init_hand(){
@@ -106,10 +100,10 @@ PlayerBot::Action PlayerBot::fold_pot(){
 	return ParentPlayerBot::fold_pot();
 }
 
-
-void PlayerBot::update_stats(){
-	this->player_stats.update_stats(this->get_bank_roll(), this->get_stake(), this->param_stat);
-}
+//
+//void PlayerBot::update_stats(){
+////	this->player_stats.update_stats(this->get_bank_roll(), this->get_stake(), this->param_stat);
+//}
 
 
 

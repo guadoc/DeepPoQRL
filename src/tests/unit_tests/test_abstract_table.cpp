@@ -6,8 +6,8 @@
  */
 
 #include "../../player_lib/AbstractPlayer.h"
+#include "../../player_lib/player_toolbox.cpp"
 #include "../../table_lib/AbstractTable.h"
-#include "../../player_lib/toolbox.cpp"
 
 using namespace std;
 using Rank = Card::Rank;

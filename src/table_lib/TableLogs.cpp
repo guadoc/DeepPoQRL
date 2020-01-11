@@ -6,9 +6,7 @@
  */
 
 #include "TableLogs.h"
-
 #include "../StdAfx.h"
-
 
 TableLogs::TableLogs(): ParentTableLogs(){
 	this->showdown_time_lapse = 0;
@@ -90,7 +88,7 @@ bool TableLogs::run_full_street(Street street, bool action){
 
 void TableLogs::showdown(bool continue_action){
 	this->display_table(-2);
-	sleep(this->showdown_time_lapse);
+//	sleep(this->showdown_time_lapse);
 	ParentTableLogs::showdown(continue_action);
 }
 

@@ -10,12 +10,12 @@
 #include "../deck_lib/Deck.h"
 #include "../deck_lib/Card.h"
 #include "../deck_lib/Hand.h"
+#include "../util_graphic/GUI.h"
 #include "../player_lib/PlayerRandom.h"
 #include "../player_lib/PlayerGUI.h"
 #include "TableLogs.h"
 //#include "AbstractTable.h"
-#include "../utils/utils.h"
-#include "GUI.h"
+//#include "../utils/utils.h"
 
 using namespace std;
 using ParentTableGUI = TableLogs;

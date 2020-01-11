@@ -1,10 +1,6 @@
 
 #include "AbstractPlayer.h"
-
 #include "../table_lib/AbstractTable.h"
-#include "../utils/utils.h"
-
-#include <sys/stat.h>
 #include <boost/filesystem.hpp>
 
 #define BASE_STAKE 100
@@ -24,17 +20,15 @@ AbstractPlayer::AbstractPlayer(void){
 	this->_is_in_hand = true;
 	this->open_hand = true;
 	this->auto_rebuy = true;
+	this->folder_to_save = "./bots/" + this->get_id();
 }
 
 AbstractPlayer::AbstractPlayer(string id):AbstractPlayer(){
 	this->id = id;
 }
 
-AbstractPlayer::AbstractPlayer(AbstractTable *table):AbstractPlayer(){
+AbstractPlayer::AbstractPlayer(AbstractTable *table, unsigned int position):AbstractPlayer(){
 	this->table = table;
-}
-
-AbstractPlayer::AbstractPlayer(AbstractTable *table, unsigned int position):AbstractPlayer(table){
 	this->pos_on_table = position;
 	this->id = this->id + to_string(position); //TODO temporary
 }
@@ -70,10 +64,6 @@ unsigned int AbstractPlayer::get_initial_bank_roll() const{
 
 unsigned int AbstractPlayer::get_stake() const {
 	return this->stake;
-}
-
-StatPlayer AbstractPlayer::get_stats() const {
-	return this->player_stats;
 }
 
 unsigned int AbstractPlayer::get_base_stake() const{
@@ -138,15 +128,19 @@ unsigned int AbstractPlayer::get_hand_value(){
 }
 
 Hand::HandCategory AbstractPlayer::get_hand_category(){
-	this->hand.scan();
+	vector<list<Card>> config = hand.scan();
 	cout<<this->hand.to_str()<<endl;
-	return this->hand.get_category_from_scanned_hand();
+	return this->hand.get_category_from_config(config);
 }
 
 AbstractPlayer::~AbstractPlayer(void){
 }
 
 void AbstractPlayer::close_hand(){
+}
+
+string AbstractPlayer::save()const {
+	return this->save_to_folder(this->folder_to_save);
 }
 
 string AbstractPlayer::save_to_folder(string foldername) const {
@@ -201,10 +195,6 @@ string AbstractPlayer::load_from_model(string model_folder){
 									+ model_folder
 									+ " does not exist");
 	}
-}
-
-void AbstractPlayer::update_stats(){
-	this->player_stats.update_stats(this->stock, this->stake);
 }
 
 string AbstractPlayer::to_str(){
@@ -279,7 +269,8 @@ AbstractPlayer::Action AbstractPlayer::play_street(unsigned int street){
 		return this->play_turn();
 		break;
 	case AbstractTable::t_river:
-		return this->play_river();
+		AbstractPlayer::Action action = this->play_river();
+		return action;
 		break;
 	}
 	return AbstractPlayer::Action::t_fold;

@@ -10,9 +10,9 @@ PlayerRandom::PlayerRandom(void):ParentPlayerRandom(){
 PlayerRandom::PlayerRandom(string id):ParentPlayerRandom(id){
 }
 
-PlayerRandom::PlayerRandom(AbstractTable* table):ParentPlayerRandom(table){
-
-}
+//PlayerRandom::PlayerRandom(AbstractTable* table):ParentPlayerRandom(table){
+//
+//}
 
 PlayerRandom::PlayerRandom(AbstractTable * table, unsigned int position):ParentPlayerRandom(table, position){
 }

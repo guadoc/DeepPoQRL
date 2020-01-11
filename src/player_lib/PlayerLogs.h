@@ -18,7 +18,7 @@ public:
 	PlayerLogs(void);
 	PlayerLogs(string);
 	PlayerLogs(string, float);
-	PlayerLogs(AbstractTable * table);
+//	PlayerLogs(AbstractTable * table);
 	PlayerLogs(AbstractTable * table, unsigned int);
 	~PlayerLogs();
 
