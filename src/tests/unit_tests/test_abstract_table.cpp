@@ -13,13 +13,49 @@ using namespace std;
 using Rank = Card::Rank;
 using Suit = Card::Suit;
 
+class MockingPlayer: public AbstractPlayer{
+public:
+	MockingPlayer(vector<AbstractPlayer::Action> actions, AbstractTable *table, unsigned int pos): AbstractPlayer(table, pos){
+		this->actions = actions;
+		this->n_street = 0;
+	}
+	AbstractPlayer::Action play_preflop(){return this->play_street();}
+	AbstractPlayer::Action play_flop(){return this->play_street();}
+	AbstractPlayer::Action play_turn(){return this->play_street();}
+	AbstractPlayer::Action play_river(){return this->play_street();}
+	AbstractPlayer::Action play_street(){
+		switch(this->actions[n_street]){
+			case t_raise:
+				this->raise_pot(2*this->table->get_pot());
+				break;
+			case t_bet:
+				this->bet_pot(2*this->table->get_pot());
+				break;
+			case t_check:
+				this->check_pot();
+				break;
+			case t_call:
+				this->call_pot();
+				break;
+			case t_fold:
+				this->fold_pot();
+				break;
+		}
+		this->n_street++;
+		return this->actions[n_street];
+	}
+protected:
+	unsigned int n_street;
+	vector<AbstractPlayer::Action> actions;
+};
+
 class test_abstract_table
 {
 public:
 	test_abstract_table(){
 	}
 
-	int run_tests(){
+	int test_all(){
 		cout<<"Running AbstractTable unit tests"<<endl;
 		this->test_pot_updates();
 		this->test_side_pots();

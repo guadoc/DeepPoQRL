@@ -7,7 +7,7 @@ class test_cards
 public:
 	test_cards(){}
 
-	int run_tests(void){
+	int test_all(void){
 		cout<<"Running Card unit tests"<<endl;
 		this->test_card_to_string();
 		cout<<"----Card unit test finished successfully"<<endl;

@@ -6,7 +6,7 @@ class test_abstract_player
 public:
 	test_abstract_player(){}
 
-	int run_tests(void){
+	int test_all(void){
 		cout<<"Running AbstractPlayer unit tests"<<endl;
 		this->test_init();
 		this->test_init_hand();
@@ -63,15 +63,15 @@ public:
 		AbstractPlayer player = AbstractPlayer("id_test");
 		player.add_to_stake(77);
 		assert(player.get_stake() == 177);
-		string save_folder = player.save_to_folder("./src/tests/unit_test/test_output_folder");
+		string save_folder = player.save_to_folder("./src/tests/unit_tests/test_output_folder/test_player");
 
 		AbstractPlayer player2 = AbstractPlayer("autre_player");
-		player2.load_from_model(save_folder);
+		player2.load_from_folder(save_folder);
 		assert(player2.get_id() == "id_test");
 
 		bool has_raised_error = false;
 		try{
-			player2.load_from_model("./not_existing_folder");
+			player2.load_from_folder("./not_existing_folder");
 		}
 		catch (const std::invalid_argument& ia) {
 			has_raised_error = true;

@@ -1,8 +1,7 @@
 
 
 #include "PlayerRandom.h"
-
-#include "../table_lib/TableGUI.h"
+#include <table_lib/AbstractTable.h>
 
 PlayerRandom::PlayerRandom(void):ParentPlayerRandom(){
 }

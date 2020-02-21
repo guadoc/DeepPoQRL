@@ -15,13 +15,13 @@
 #include "tests/unit_tests/test_deck.cpp"
 #include "tests/unit_tests/test_hand.cpp"
 #include "tests/unit_tests/test_stat_player.cpp"
+#include "tests/unit_tests/test_player_v2.cpp"
 
 
 #include "deck_lib/HandValueManager.h"
 #include "tests/graphic_session.cpp"
 #include "tests/training_session.cpp"
 
-//#include "tests/unit_tests/test_plot.cpp"
 using namespace std;
 
 #include "toolbox.cpp"
@@ -35,6 +35,7 @@ int main(){
 //	test_deck().test_all();
 //	test_hand(verbose).test_all();
 //	test_table_train().test_all();
+//	test_player_v2().test_save_and_load();
 
 //	test_stat_player().test_all();
 
@@ -43,11 +44,13 @@ int main(){
 
 //	HandValueManager().fill_map_5_cards("./hand_value_maps/map5cards.p");
 
-	unsigned int n_hand = 10000;
+	unsigned int n_hand = 100;
 //	only_gui_players(n_hand);
-//	gui_vs_bots(n_hand, false);
+	gui_vs_bots(n_hand, false);
+	string folder_bot_to_train = "./bots/v2";
+	string folder_bot_against = "./bots/v2";
 	Session sess = Session();
-	sess.train_individual("./bots/V2", n_hand);
-
+//	sess.train_individual(folder_bot_to_train, folder_bot_against, n_hand);
+//	sess.test_trained_player(folder_bot, n_hand);
 	return 0;
 }

@@ -28,7 +28,6 @@ public:
 
 	void commit_chips(unsigned int);
 	void add_to_stake(unsigned int);
-//	void update_stats();
 	void set_train_mode(bool);
 
 
@@ -55,7 +54,6 @@ public:
 protected:
 	bool train_mode;
 	int loss;
-//	float param_stat; //can be a vector
 };
 
 #endif /* PLAYER_LIB_PLAYERBOT_H_ */

@@ -31,7 +31,7 @@ public:
 	bool verbose = false;
 	test_hand(bool verbose){this->verbose = verbose;}
 
-	int run_tests(void){
+	int test_all(void){
 		cout<<"Running Hand unit tests"<<endl;
 		this->test_adversarial();
 		this->test_categories();

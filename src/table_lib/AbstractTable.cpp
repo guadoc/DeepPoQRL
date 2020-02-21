@@ -185,12 +185,12 @@ void AbstractTable::init_hand(){
 }
 
 void AbstractTable::close_hand(){
-	//The dealer button increment to the next player.
-	this->dealer = (this->dealer + 1 ) % this->n_players;
 	// each player close the hand
 	for (unsigned int i = 0; i < this->n_players; i++){
 		this->players[i]->close_hand();
 	}
+	//The dealer button increment to the next player.
+	this->dealer = (this->dealer + 1 ) % this->n_players;
 }
 
 void AbstractTable::set_blends(){

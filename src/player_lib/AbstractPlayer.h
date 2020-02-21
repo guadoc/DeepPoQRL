@@ -90,14 +90,12 @@ public:
 	virtual Action play_turn(){cout<< "virtual function playTurn not defined"<<endl;return t_fold;};
 	virtual Action play_river(){cout<< "virtual function playRiver not defined"<<endl;return t_fold;};
 
+
+	string save() const;
 	virtual void transfert_in(boost::archive::binary_iarchive & iarch);
 	virtual void transfert_out(boost::archive::binary_oarchive &oa) const;
 	virtual string save_to_folder(string) const;
-	string save() const;
 	virtual string load_from_folder(string);
-	virtual string load_from_model(string);
-
-	friend class boost::serialization::access;
 	template<class Archive>
 	void serialize(Archive & ar, const unsigned int version);
 

@@ -139,14 +139,15 @@ AbstractPlayer::~AbstractPlayer(void){
 void AbstractPlayer::close_hand(){
 }
 
-string AbstractPlayer::save()const {
+string AbstractPlayer::save() const {
 	return this->save_to_folder(this->folder_to_save);
 }
 
 string AbstractPlayer::save_to_folder(string foldername) const {
 	cout<<"Saving "<<this->get_id()<<" in "<<foldername<<endl;
-	string folder_to_save = foldername + "/" + this->get_id();
-	boost::filesystem::create_directory(folder_to_save);
+	string folder_to_save = foldername;// + "/" + this->get_id();
+	boost::filesystem::path p(folder_to_save);
+	boost::filesystem::create_directory(p);
 	string filename = folder_to_save + "/setup.p";
 	std::ofstream ofs(filename);
 	boost::archive::binary_oarchive oa(ofs);
@@ -168,13 +169,7 @@ void AbstractPlayer::serialize(Archive & ar, const unsigned int version){
 	ar & this->id;
 }
 
-string AbstractPlayer::load_from_folder(string foldername){
-	cout<<"Loading "<<this->get_id()<<" from "<<foldername<<endl;
-	string folder_to_load = foldername + "/" + this->get_id();
-	return this->load_from_model(folder_to_load);
-}
-
-string AbstractPlayer::load_from_model(string model_folder){
+string AbstractPlayer::load_from_folder(string model_folder){
 	if(boost::filesystem::exists(model_folder)){
 		cout<<"Loading "<<this->get_id()<<" from "<<model_folder<<endl;
 		string setup_filename = model_folder + "/setup.p";

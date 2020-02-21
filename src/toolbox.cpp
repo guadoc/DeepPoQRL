@@ -23,15 +23,15 @@ static void progress_bar(float percentage){
 		bar+=" ";
 	}
 	bar += "]" + to_string((int)(percentage*100)) + "%";
-	if (N_char_to_print == n_done){
-		bar += "\n";
-	}
 	cout<< "\r" + bar<<flush;
 }
 
 
 static void progress_bar(unsigned int iter, unsigned int total_iter){
 	progress_bar((float)(iter+1) / float(total_iter));
+	if(iter == total_iter){
+		cout<<endl;
+	}
 }
 
 
@@ -50,6 +50,21 @@ static void list_to_scv(string filename, ListType list){
 	}
 	out_file<<"\n";
 	out_file.close();
+}
+
+static list<float> average_list(list<float> const &list_to_average, unsigned int n_average){
+	list<float> averaged_list;
+	unsigned int i = 0;
+	float avg = 0;
+	for(float const & value: list_to_average){
+		avg += value / n_average;
+		if(i%n_average == 0){
+			averaged_list.push_back(avg);
+			avg = 0;
+		}
+		i++;
+	}
+	return averaged_list;
 }
 
 #endif
